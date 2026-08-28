@@ -154,6 +154,11 @@
   .brand .name { font-family: var(--font-display); font-size: 19px; font-weight: 600; }
   .brand .sub { font-size: 11.5px; color: var(--ink-faint); }
 
+  .nav-section {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-faint); padding: 12px 10px 4px; font-weight: 600;
+  }
+  .nav-section:first-child { padding-top: 0; }
   .nav { display: flex; flex-direction: column; gap: 2px; }
   .nav button {
     all: unset;
@@ -422,9 +427,18 @@
     </div>
 
     <nav class="nav">
+      <div class="nav-section">Promociones</div>
       <button data-page="registrar" onclick="goPage('registrar')"><span class="icon">＋</span> Registrar promoción</button>
       <button data-page="panel" onclick="goPage('panel')"><span class="icon">▤</span> Panel de promociones</button>
       <button data-page="carga" onclick="goPage('carga')"><span class="icon">✓</span> Listas para cargar</button>
+
+      <div class="nav-section">Acuerdos comerciales</div>
+      <button data-page="ac-registrar" onclick="goPage('ac-registrar')"><span class="icon">＋</span> Registrar acuerdo</button>
+      <button data-page="ac-panel" onclick="goPage('ac-panel')"><span class="icon">▤</span> Panel de acuerdos</button>
+      <button data-page="ac-mkt" onclick="goPage('ac-mkt')"><span class="icon">◆</span> Calendario Marketing</button>
+      <button data-page="ac-ops" onclick="goPage('ac-ops')"><span class="icon">◆</span> Calendario Operaciones</button>
+      <button data-page="ac-cobros" onclick="goPage('ac-cobros')"><span class="icon">$</span> Calendario de cobros</button>
+      <button data-page="ac-resumen" onclick="goPage('ac-resumen')"><span class="icon">◈</span> Resumen CCO</button>
     </nav>
 
     <div class="sidebar-footer">
@@ -555,6 +569,133 @@
       </div>
       <div id="carga-content"></div>
     </section>
+
+    <!-- ---------------- PÁGINA: REGISTRAR ACUERDO ---------------- -->
+    <section id="page-ac-registrar" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Registrar acuerdo comercial</h1>
+          <p>Rebates, incentivos, marketing funding, renta de espacio y otros acuerdos con proveedores. La aprobación y las cuotas de cobro se calculan automáticamente al guardar.</p>
+        </div>
+      </div>
+
+      <div id="ac-registrar-result"></div>
+      <div id="ac-registrar-errors"></div>
+
+      <form id="form-acuerdo" class="card" onsubmit="return handleGuardarAcuerdo(event)">
+        <div class="field-group">
+          <div class="fg-title">1 · Identificación</div>
+          <div class="fg-grid">
+            <div class="field"><label>Agreement ID</label><input type="text" id="a-id" class="mono" /></div>
+            <div class="field"><label>País <span class="req">*</span></label><select id="a-pais"></select></div>
+            <div class="field"><label>Responsable Comercial <span class="req">*</span></label><input type="text" id="a-responsable" /></div>
+            <div class="field"><label>Proveedor <span class="req">*</span></label><input type="text" id="a-proveedor" /></div>
+            <div class="field"><label>Tipo de acuerdo <span class="req">*</span></label><select id="a-tipo-acuerdo"></select></div>
+            <div class="field" style="grid-column: span 2;"><label>Descripción del acuerdo <span class="req">*</span></label><input type="text" id="a-descripcion" /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">2 · Economía del acuerdo</div>
+          <div class="fg-grid">
+            <div class="field"><label>Tipo de valor <span class="req">*</span></label><select id="a-tipo-valor" onchange="toggleTipoValor()"></select></div>
+            <div class="field" id="a-field-monto-fijo"><label>Monto total negociación <span class="req">*</span></label><input type="number" step="0.01" min="0" id="a-monto-total" /></div>
+            <div class="field" id="a-field-base-variable" style="display:none;"><label>Base variable <span class="req">*</span></label><select id="a-base-variable" onchange="toggleBaseOtro()"></select></div>
+            <div class="field" id="a-field-detalle-base" style="display:none;"><label>Detalle base (si Otro) <span class="req">*</span></label><input type="text" id="a-detalle-base" placeholder="ej: compras netas sin impuestos" /></div>
+            <div class="field" id="a-field-pct" style="display:none;"><label>% acordado <span class="req">*</span></label><input type="number" step="0.01" min="0" max="1" id="a-pct" placeholder="ej: 0.03 = 3%" /></div>
+            <div class="field"><label>Moneda <span class="req">*</span></label><select id="a-moneda"></select></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">3 · Vigencia y cobro</div>
+          <div class="fg-grid">
+            <div class="field"><label>Fecha inicio <span class="req">*</span></label><input type="date" id="a-fecha-inicio" /></div>
+            <div class="field"><label>Fecha fin <span class="req">*</span></label><input type="date" id="a-fecha-fin" /></div>
+            <div class="field"><label>Frecuencia de cobro <span class="req">*</span></label><select id="a-frecuencia"></select></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">4 · Ejecución y governance</div>
+          <div class="fg-grid">
+            <div class="field"><label>Área que confirma ejecución <span class="req">*</span></label><select id="a-area-confirma" onchange="toggleCondicionComercial()"></select></div>
+            <div class="field" id="a-field-condicion" style="display:none;"><label>¿Condición / ejecución confirmada? <span class="req">*</span></label><select id="a-condicion"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+            <div class="field"><label>¿Aprobación escrita del proveedor? <span class="req">*</span></label><select id="a-aprobacion"><option value="Sí">Sí</option><option value="No">No</option></select></div>
+            <div class="field"><label>Referencia aprobación / documento</label><input type="text" id="a-referencia" /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">Opcional</div>
+          <div class="fg-grid">
+            <div class="field"><label>Agreement / Promo ID relacionado</label><input type="text" id="a-relacionado" /></div>
+            <div class="field"><label>Meta / Umbral (si aplica)</label><input type="text" id="a-meta" /></div>
+            <div class="field" style="grid-column: 1 / -1;"><label>Observaciones</label><textarea id="a-observaciones"></textarea></div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <span style="font-size:11.5px; color:var(--ink-faint);">Los campos marcados con <span class="req">*</span> son obligatorios.</span>
+          <button type="submit" class="btn btn-primary">Calcular y guardar acuerdo</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ---------------- PÁGINA: PANEL DE ACUERDOS ---------------- -->
+    <section id="page-ac-panel" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Panel de acuerdos comerciales</h1>
+          <p>Todos los acuerdos registrados, con su estatus de gobernanza.</p>
+        </div>
+      </div>
+      <div id="ac-panel-content"></div>
+    </section>
+
+    <!-- ---------------- PÁGINA: CALENDARIO MARKETING ---------------- -->
+    <section id="page-ac-mkt" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Calendario de ejecución — Marketing</h1>
+          <p>Acuerdos APROBADOS cuya área que confirma ejecución es Marketing. Trabaja por fecha esperada.</p>
+        </div>
+      </div>
+      <div id="ac-mkt-content"></div>
+    </section>
+
+    <!-- ---------------- PÁGINA: CALENDARIO OPERACIONES ---------------- -->
+    <section id="page-ac-ops" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Calendario de ejecución — Operaciones</h1>
+          <p>Acuerdos APROBADOS cuya área que confirma ejecución es Operaciones. Trabaja por fecha esperada.</p>
+        </div>
+      </div>
+      <div id="ac-ops-content"></div>
+    </section>
+
+    <!-- ---------------- PÁGINA: CALENDARIO DE COBROS ---------------- -->
+    <section id="page-ac-cobros" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Calendario de cobros — Finanzas</h1>
+          <p>Una fila por cuota esperada. Para acuerdos variables, carga la base real del período para que el sistema calcule el monto esperado.</p>
+        </div>
+      </div>
+      <div id="ac-cobros-content"></div>
+    </section>
+
+    <!-- ---------------- PÁGINA: RESUMEN CCO ---------------- -->
+    <section id="page-ac-resumen" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Resumen — Control Tower CCO</h1>
+          <p>Comercial define el acuerdo, Marketing/Operaciones confirman ejecución, Finanzas administra cada cuota.</p>
+        </div>
+      </div>
+      <div id="ac-resumen-content"></div>
+    </section>
   </main>
 </div>
 
@@ -569,16 +710,29 @@ const CAT = {
   OBJETIVOS: ["Tráfico","Competitividad","Incrementar basket","Sell-through","Liquidar inventario","Lanzamiento","Fidelización","Desarrollo de categoría"],
   MECANICAS: ["% descuento","Precio especial","2x1","Bundle","Segunda unidad","Loyalty","Cupón","Otro"],
   CANALES: ["Todos los canales","Todas las tiendas","Tiendas seleccionadas","E-commerce","App","Call Center","Marketplace"],
+  TIPOS_ACUERDO: ["Rebate","Incentivo por volumen","Marketing Funding","Promotional Funding","Renta de espacio","Activación / Evento","Digital","Listing Fee","Exclusividad","Otro"],
+  TIPOS_VALOR: ["Monto fijo","Monto variable"],
+  BASES_VARIABLES: ["Sell In","Sell Out","Otro"],
+  FRECUENCIAS: ["Mensual","Trimestral","Semestral","Anual","Único"],
+  MONEDAS: ["HNL","USD","CRC","GTQ","NIO"],
+  AREAS_CONFIRMAN: ["No aplica","Marketing","Operaciones","Comercial"],
 };
+const FREQ_MESES = { "Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
 
 const STORE_KEY = "kielsa_promo_demo_v1";
 
 function loadStore() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const s = JSON.parse(raw);
+      s.acuerdos = s.acuerdos || [];
+      s.calendarioEjecucion = s.calendarioEjecucion || [];
+      s.cuotas = s.cuotas || [];
+      return s;
+    }
   } catch (e) {}
-  return { usuarios: [], promos: [], sesion: null };
+  return { usuarios: [], promos: [], sesion: null, acuerdos: [], calendarioEjecucion: [], cuotas: [] };
 }
 function saveStore() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); } catch (e) {}
@@ -624,6 +778,136 @@ function calcularPromocion(p) {
 function instruccionCarga(estatus) { return estatus === "APROBADA" ? "CARGAR" : ""; }
 
 /* ==========================================================================
+   CÁLCULOS — ACUERDOS COMERCIALES (idénticos a acuerdos.py)
+   ========================================================================== */
+function parseISO(d) { const [y,m,day] = d.split("-").map(Number); return new Date(y, m-1, day); }
+function toISO(d) { return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+function hoyDate() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+
+function calcularDuracionMeses(fechaInicio, fechaFin) {
+  if (!fechaInicio || !fechaFin) return 0;
+  const fi = parseISO(fechaInicio), ff = parseISO(fechaFin);
+  const meses = (ff.getFullYear() - fi.getFullYear()) * 12 + (ff.getMonth() - fi.getMonth()) + 1;
+  return Math.max(1, meses);
+}
+function calcularNCobrosEsperados(duracionMeses, frecuencia) {
+  if (!duracionMeses || !frecuencia) return 0;
+  if (frecuencia === "Único") return 1;
+  const step = FREQ_MESES[frecuencia];
+  if (!step) return 0;
+  return Math.ceil(duracionMeses / step);
+}
+function calcularAcuerdo(a) {
+  const r = {};
+  r.duracion_meses = calcularDuracionMeses(a.fecha_inicio, a.fecha_fin);
+  r.n_cobros_esperados = calcularNCobrosEsperados(r.duracion_meses, a.frecuencia_cobro);
+
+  const obligatorios = [a.pais, a.responsable_comercial, a.proveedor, a.tipo_acuerdo, a.descripcion,
+    a.tipo_valor, a.moneda, a.fecha_inicio, a.fecha_fin, a.frecuencia_cobro, a.area_confirma];
+  const faltanDatos = obligatorios.some(v => !v);
+  const montoFijoInvalido = a.tipo_valor === "Monto fijo" && (!a.monto_total_negociacion || a.monto_total_negociacion <= 0);
+  const montoVariableInvalido = a.tipo_valor === "Monto variable" && (!a.base_variable || !a.pct_acordado || a.pct_acordado <= 0);
+  const faltaDetalleOtro = a.base_variable === "Otro" && !a.detalle_base;
+
+  if (!a.agreement_id) { r.estatus = ""; r.motivo_alerta = ""; }
+  else if (a.aprobacion_escrita !== "Sí") { r.estatus = "BLOQUEADO"; r.motivo_alerta = "Falta aprobación escrita del proveedor"; }
+  else if (faltanDatos) { r.estatus = "BLOQUEADO"; r.motivo_alerta = "Faltan datos obligatorios"; }
+  else if (montoFijoInvalido) { r.estatus = "BLOQUEADO"; r.motivo_alerta = "Monto total requerido para monto fijo"; }
+  else if (montoVariableInvalido) { r.estatus = "BLOQUEADO"; r.motivo_alerta = "Falta Base variable o % acordado"; }
+  else if (faltaDetalleOtro) { r.estatus = "BLOQUEADO"; r.motivo_alerta = "Describa la base variable"; }
+  else { r.estatus = "APROBADO"; r.motivo_alerta = "OK"; }
+  return r;
+}
+function siguienteAgreementId() {
+  let max = 0;
+  STATE.acuerdos.forEach(a => { const m = /^AGR-(\d+)$/.exec(a.agreement_id); if (m) max = Math.max(max, parseInt(m[1],10)); });
+  return "AGR-" + String(max + 1).padStart(4, "0");
+}
+function eomonth(base, mesesASumar) {
+  const total = base.getMonth() + mesesASumar;
+  const y = base.getFullYear() + Math.floor(total / 12);
+  const m = ((total % 12) + 12) % 12;
+  return new Date(y, m + 1, 0); // día 0 del mes siguiente = último día de m
+}
+function generarCuotas(agreementId, a, calc) {
+  if (calc.estatus !== "APROBADO" || calc.n_cobros_esperados < 1) return [];
+  const fi = parseISO(a.fecha_inicio), ff = parseISO(a.fecha_fin);
+  const step = FREQ_MESES[a.frecuencia_cobro];
+  let montoFijoCuota = null;
+  if (a.tipo_valor === "Monto fijo" && a.monto_total_negociacion && calc.n_cobros_esperados) {
+    montoFijoCuota = Math.round((a.monto_total_negociacion / calc.n_cobros_esperados) * 100) / 100;
+  }
+  const cuotas = [];
+  for (let k = 1; k <= calc.n_cobros_esperados; k++) {
+    const fechaEsperada = (a.frecuencia_cobro === "Único" || !step) ? ff : eomonth(fi, k * step - 1);
+    cuotas.push({
+      agreement_id: agreementId, cuota_numero: k, fecha_esperada_cobro: toISO(fechaEsperada),
+      tipo_valor: a.tipo_valor, base_variable: a.tipo_valor === "Monto variable" ? a.base_variable : "No aplica",
+      pct_acordado: a.tipo_valor === "Monto variable" ? a.pct_acordado : 0, moneda: a.moneda,
+      monto_fijo_cuota: montoFijoCuota, base_real_periodo: null, monto_cobrado_cuota: 0,
+      fecha_cobro: null, documento_referencia: "",
+    });
+  }
+  return cuotas;
+}
+function calcularMontoEsperado(tipoValor, montoFijoCuota, baseRealPeriodo, pctAcordado) {
+  if (tipoValor === "Monto fijo") return montoFijoCuota;
+  if (baseRealPeriodo === null || baseRealPeriodo === undefined) return null;
+  return Math.round(baseRealPeriodo * (pctAcordado || 0) * 100) / 100;
+}
+function calcularEjecucionConfirmada(areaConfirma, condicionConfirmada, ejecutadoMkt, ejecutadoOps) {
+  if (areaConfirma === "No aplica") return "Sí";
+  if (areaConfirma === "Comercial") return condicionConfirmada === "Sí" ? "Sí" : "No";
+  if (areaConfirma === "Marketing") return ejecutadoMkt === "Sí" ? "Sí" : "No";
+  if (areaConfirma === "Operaciones") return ejecutadoOps === "Sí" ? "Sí" : "No";
+  return "No";
+}
+function calcularDevengado(ejecucionConfirmada, fechaEsperadaCobro, montoEsperado) {
+  if (montoEsperado === null || montoEsperado === undefined) return "No";
+  return (ejecucionConfirmada === "Sí" && hoyDate() >= parseISO(fechaEsperadaCobro)) ? "Sí" : "No";
+}
+function calcularPendienteCuota(devengado, montoEsperado, montoCobrado) {
+  if (devengado !== "Sí" || montoEsperado === null || montoEsperado === undefined) return 0;
+  return Math.max(0, montoEsperado - (montoCobrado || 0));
+}
+function calcularEstatusCuota(tipoValor, baseRealPeriodo, devengado, montoCobrado, montoEsperado, fechaEsperadaCobro) {
+  if (tipoValor === "Monto variable" && (baseRealPeriodo === null || baseRealPeriodo === undefined)) return "PENDIENTE BASE REAL";
+  if (devengado !== "Sí") return "FUTURO / NO DEVENGADO";
+  if (montoEsperado !== null && montoEsperado !== undefined && (montoCobrado || 0) >= montoEsperado) return "COBRADO";
+  if (hoyDate() > parseISO(fechaEsperadaCobro)) return "VENCIDO";
+  return "DEVENGADO - PENDIENTE";
+}
+function calcularDiasVencido(estatusCuota, fechaEsperadaCobro) {
+  if (estatusCuota !== "VENCIDO") return 0;
+  return Math.round((hoyDate() - parseISO(fechaEsperadaCobro)) / 86400000);
+}
+function calcularEstatusCalendarioEjecucion(agreementId, ejecutado, fechaEsperada) {
+  if (!agreementId) return "";
+  if (ejecutado === "Sí") return "EJECUTADO";
+  if (hoyDate() > parseISO(fechaEsperada)) return "VENCIDO / NO EJECUTADO";
+  return "PENDIENTE";
+}
+function enriquecerCuota(c) {
+  const acuerdo = STATE.acuerdos.find(a => a.agreement_id === c.agreement_id) || {};
+  let ejecutadoMkt = null, ejecutadoOps = null;
+  if (acuerdo.area_confirma === "Marketing") {
+    const e = STATE.calendarioEjecucion.find(x => x.agreement_id === c.agreement_id && x.area === "Marketing");
+    ejecutadoMkt = e ? e.ejecutado : "No";
+  } else if (acuerdo.area_confirma === "Operaciones") {
+    const e = STATE.calendarioEjecucion.find(x => x.agreement_id === c.agreement_id && x.area === "Operaciones");
+    ejecutadoOps = e ? e.ejecutado : "No";
+  }
+  const ejecucion = calcularEjecucionConfirmada(acuerdo.area_confirma, acuerdo.condicion_confirmada, ejecutadoMkt, ejecutadoOps);
+  const montoEsperado = calcularMontoEsperado(c.tipo_valor, c.monto_fijo_cuota, c.base_real_periodo, c.pct_acordado);
+  const devengado = calcularDevengado(ejecucion, c.fecha_esperada_cobro, montoEsperado);
+  const pendiente = calcularPendienteCuota(devengado, montoEsperado, c.monto_cobrado_cuota || 0);
+  const estatusCuota = calcularEstatusCuota(c.tipo_valor, c.base_real_periodo, devengado, c.monto_cobrado_cuota || 0, montoEsperado, c.fecha_esperada_cobro);
+  const diasVencido = calcularDiasVencido(estatusCuota, c.fecha_esperada_cobro);
+  return { ...c, proveedor: acuerdo.proveedor, tipo_acuerdo: acuerdo.tipo_acuerdo, ejecucion_confirmada: ejecucion,
+    monto_esperado: montoEsperado, devengado, pendiente_cuota: pendiente, estatus_cuota: estatusCuota, dias_vencido: diasVencido };
+}
+
+/* ==========================================================================
    UTILIDADES
    ========================================================================== */
 function fmtMoney(n) { return (n || 0).toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -648,6 +932,23 @@ function rowClass(estatus) {
   if (estatus === "APROBADA") return "row-success";
   if (estatus === "REQUIERE APROBACIÓN") return "row-warning";
   if (estatus === "BLOQUEADA") return "row-danger";
+  return "";
+}
+function pillClassAcuerdo(estatus) {
+  if (estatus === "APROBADO") return "pill-success";
+  if (estatus === "BLOQUEADO") return "pill-danger";
+  return "";
+}
+function pillClassCuota(estatus) {
+  if (estatus === "COBRADO") return "pill-success";
+  if (estatus === "DEVENGADO - PENDIENTE") return "pill-warning";
+  if (estatus === "VENCIDO") return "pill-danger";
+  return "";
+}
+function pillClassEjec(estatus) {
+  if (estatus === "EJECUTADO") return "pill-success";
+  if (estatus === "PENDIENTE") return "pill-warning";
+  if (estatus === "VENCIDO / NO EJECUTADO") return "pill-danger";
   return "";
 }
 function siguientePromoId() {
@@ -715,13 +1016,21 @@ function currentUser() {
 /* ==========================================================================
    NAVEGACIÓN
    ========================================================================== */
+const ALL_PAGES = ["registrar","panel","carga","ac-registrar","ac-panel","ac-mkt","ac-ops","ac-cobros","ac-resumen"];
+
 function goPage(page) {
-  ["registrar","panel","carga"].forEach(p => {
+  ALL_PAGES.forEach(p => {
     document.getElementById("page-" + p).style.display = p === page ? "block" : "none";
   });
   document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.page === page));
   if (page === "panel") renderPanel();
   if (page === "carga") renderCarga();
+  if (page === "ac-registrar") resetFormAcuerdo();
+  if (page === "ac-panel") renderPanelAcuerdos();
+  if (page === "ac-mkt") renderCalendarioEjecucion("Marketing");
+  if (page === "ac-ops") renderCalendarioEjecucion("Operaciones");
+  if (page === "ac-cobros") renderCalendarioCobros();
+  if (page === "ac-resumen") renderResumenCCO();
 }
 
 /* ==========================================================================
@@ -1044,6 +1353,459 @@ function exportarExcel() {
 }
 
 /* ==========================================================================
+   ACUERDOS COMERCIALES — FORMULARIO
+   ========================================================================== */
+function fillSelectAcuerdos() {
+  fillSelect("a-pais", CAT.PAISES);
+  fillSelect("a-tipo-acuerdo", CAT.TIPOS_ACUERDO);
+  fillSelect("a-tipo-valor", CAT.TIPOS_VALOR);
+  fillSelect("a-base-variable", CAT.BASES_VARIABLES);
+  fillSelect("a-moneda", CAT.MONEDAS);
+  fillSelect("a-frecuencia", CAT.FRECUENCIAS);
+  fillSelect("a-area-confirma", CAT.AREAS_CONFIRMAN);
+}
+function toggleTipoValor() {
+  const esVariable = document.getElementById("a-tipo-valor").value === "Monto variable";
+  document.getElementById("a-field-monto-fijo").style.display = esVariable ? "none" : "flex";
+  document.getElementById("a-field-base-variable").style.display = esVariable ? "flex" : "none";
+  document.getElementById("a-field-pct").style.display = esVariable ? "flex" : "none";
+  if (!esVariable) document.getElementById("a-field-detalle-base").style.display = "none";
+  else toggleBaseOtro();
+}
+function toggleBaseOtro() {
+  const esOtro = document.getElementById("a-base-variable").value === "Otro";
+  document.getElementById("a-field-detalle-base").style.display = esOtro ? "flex" : "none";
+}
+function toggleCondicionComercial() {
+  const esComercial = document.getElementById("a-area-confirma").value === "Comercial";
+  document.getElementById("a-field-condicion").style.display = esComercial ? "flex" : "none";
+}
+function resetFormAcuerdo() {
+  const form = document.getElementById("form-acuerdo");
+  if (!form) return;
+  form.reset();
+  document.getElementById("a-id").value = siguienteAgreementId();
+  document.getElementById("a-responsable").value = currentUser()?.nombre_completo || "";
+  document.getElementById("a-fecha-inicio").value = todayISO();
+  document.getElementById("a-fecha-fin").value = todayISO();
+  document.getElementById("a-aprobacion").value = "Sí";
+  toggleTipoValor();
+  toggleCondicionComercial();
+  document.getElementById("ac-registrar-result").innerHTML = "";
+  document.getElementById("ac-registrar-errors").innerHTML = "";
+  form.dataset.editing = "";
+}
+function readFormAcuerdo() {
+  const tipoValor = document.getElementById("a-tipo-valor").value;
+  return {
+    agreement_id: document.getElementById("a-id").value.trim(),
+    pais: document.getElementById("a-pais").value,
+    responsable_comercial: document.getElementById("a-responsable").value.trim(),
+    proveedor: document.getElementById("a-proveedor").value.trim(),
+    tipo_acuerdo: document.getElementById("a-tipo-acuerdo").value,
+    descripcion: document.getElementById("a-descripcion").value.trim(),
+    tipo_valor: tipoValor,
+    base_variable: tipoValor === "Monto variable" ? document.getElementById("a-base-variable").value : null,
+    detalle_base: document.getElementById("a-detalle-base").value.trim() || null,
+    pct_acordado: tipoValor === "Monto variable" ? (parseFloat(document.getElementById("a-pct").value) || 0) : null,
+    monto_total_negociacion: tipoValor === "Monto fijo" ? (parseFloat(document.getElementById("a-monto-total").value) || 0) : null,
+    moneda: document.getElementById("a-moneda").value,
+    fecha_inicio: document.getElementById("a-fecha-inicio").value,
+    fecha_fin: document.getElementById("a-fecha-fin").value,
+    frecuencia_cobro: document.getElementById("a-frecuencia").value,
+    area_confirma: document.getElementById("a-area-confirma").value,
+    condicion_confirmada: document.getElementById("a-area-confirma").value === "Comercial" ? document.getElementById("a-condicion").value : "",
+    aprobacion_escrita: document.getElementById("a-aprobacion").value,
+    referencia_aprobacion: document.getElementById("a-referencia").value.trim(),
+    id_relacionado: document.getElementById("a-relacionado").value.trim(),
+    meta_umbral: document.getElementById("a-meta").value.trim(),
+    observaciones: document.getElementById("a-observaciones").value.trim(),
+  };
+}
+function guardarAcuerdoCompleto(a) {
+  const calc = calcularAcuerdo(a);
+  const existente = STATE.acuerdos.find(x => x.agreement_id === a.agreement_id);
+  const record = { ...a, ...calc };
+  STATE.acuerdos = STATE.acuerdos.filter(x => x.agreement_id !== a.agreement_id);
+  STATE.acuerdos.unshift(record);
+
+  // Sincronizar calendario de ejecución
+  STATE.calendarioEjecucion = STATE.calendarioEjecucion.filter(x => x.agreement_id !== a.agreement_id);
+  if (calc.estatus === "APROBADO" && (a.area_confirma === "Marketing" || a.area_confirma === "Operaciones")) {
+    const previa = (existente && existente._ejecPrevia) || null;
+    STATE.calendarioEjecucion.push({
+      agreement_id: a.agreement_id, area: a.area_confirma, fecha_esperada: a.fecha_fin,
+      responsable_ejecucion: previa?.responsable_ejecucion || "", ejecutado: previa?.ejecutado || "No",
+      fecha_ejecucion: previa?.fecha_ejecucion || null, evidencia: previa?.evidencia || "",
+      observaciones: previa?.observaciones || "",
+    });
+  }
+
+  // Regenerar cuotas, preservando lo ya cobrado por número de cuota
+  const cuotasPrevias = {};
+  STATE.cuotas.filter(c => c.agreement_id === a.agreement_id).forEach(c => { cuotasPrevias[c.cuota_numero] = c; });
+  const nuevasCuotas = generarCuotas(a.agreement_id, a, calc).map(c => {
+    const prev = cuotasPrevias[c.cuota_numero];
+    if (prev) {
+      return { ...c, base_real_periodo: prev.base_real_periodo, monto_cobrado_cuota: prev.monto_cobrado_cuota,
+        fecha_cobro: prev.fecha_cobro, documento_referencia: prev.documento_referencia };
+    }
+    return c;
+  });
+  STATE.cuotas = STATE.cuotas.filter(c => c.agreement_id !== a.agreement_id).concat(nuevasCuotas);
+
+  saveStore();
+  return calc;
+}
+function handleGuardarAcuerdo(ev) {
+  ev.preventDefault();
+  const a = readFormAcuerdo();
+  const errores = [];
+  if (!a.agreement_id) errores.push("Agreement ID es obligatorio.");
+  const existe = STATE.acuerdos.find(x => x.agreement_id === a.agreement_id);
+  const editando = document.getElementById("form-acuerdo").dataset.editing === a.agreement_id;
+  if (existe && !editando) errores.push(`El Agreement ID '${a.agreement_id}' ya existe.`);
+  if (a.fecha_fin < a.fecha_inicio) errores.push("La fecha fin debe ser posterior o igual a la fecha inicio.");
+  [["Responsable Comercial", a.responsable_comercial], ["Proveedor", a.proveedor], ["Descripción", a.descripcion]].forEach(([label, val]) => {
+    if (!val) errores.push(`El campo '${label}' es obligatorio.`);
+  });
+  const errBox = document.getElementById("ac-registrar-errors");
+  if (errores.length) {
+    errBox.innerHTML = `<div class="error-box"><strong>Revisa lo siguiente:</strong><ul>${errores.map(e => `<li>${escapeHtml(e)}</li>`).join("")}</ul></div>`;
+    document.getElementById("ac-registrar-result").innerHTML = "";
+    return false;
+  }
+  errBox.innerHTML = "";
+  const calc = guardarAcuerdoCompleto(a);
+  const bannerClass = calc.estatus === "APROBADO" ? "success" : "danger";
+  document.getElementById("ac-registrar-result").innerHTML = `
+    <div class="result-banner ${bannerClass}">
+      <span class="pill ${pillClassAcuerdo(calc.estatus)}">${calc.estatus}</span>
+      <div>
+        <div class="rb-title">Acuerdo ${escapeHtml(a.agreement_id)} guardado</div>
+        <div class="rb-sub">${escapeHtml(calc.motivo_alerta)} · Duración ${calc.duracion_meses} meses · ${calc.n_cobros_esperados} cuota(s) esperada(s)</div>
+      </div>
+    </div>`;
+  showToast(`${a.agreement_id} guardado — ${calc.estatus}`);
+  document.getElementById("form-acuerdo").dataset.editing = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setTimeout(() => resetFormAcuerdo(), 10);
+  return false;
+}
+function editarAcuerdo(agreementId) {
+  const a = STATE.acuerdos.find(x => x.agreement_id === agreementId);
+  if (!a) return;
+  goPage("ac-registrar");
+  document.getElementById("a-id").value = a.agreement_id;
+  document.getElementById("a-pais").value = a.pais;
+  document.getElementById("a-responsable").value = a.responsable_comercial;
+  document.getElementById("a-proveedor").value = a.proveedor;
+  document.getElementById("a-tipo-acuerdo").value = a.tipo_acuerdo;
+  document.getElementById("a-descripcion").value = a.descripcion;
+  document.getElementById("a-tipo-valor").value = a.tipo_valor;
+  toggleTipoValor();
+  if (a.tipo_valor === "Monto variable") {
+    document.getElementById("a-base-variable").value = a.base_variable || "Sell In";
+    toggleBaseOtro();
+    document.getElementById("a-detalle-base").value = a.detalle_base || "";
+    document.getElementById("a-pct").value = a.pct_acordado || "";
+  } else {
+    document.getElementById("a-monto-total").value = a.monto_total_negociacion || "";
+  }
+  document.getElementById("a-moneda").value = a.moneda;
+  document.getElementById("a-fecha-inicio").value = a.fecha_inicio;
+  document.getElementById("a-fecha-fin").value = a.fecha_fin;
+  document.getElementById("a-frecuencia").value = a.frecuencia_cobro;
+  document.getElementById("a-area-confirma").value = a.area_confirma;
+  toggleCondicionComercial();
+  document.getElementById("a-condicion").value = a.condicion_confirmada || "No";
+  document.getElementById("a-aprobacion").value = a.aprobacion_escrita;
+  document.getElementById("a-referencia").value = a.referencia_aprobacion || "";
+  document.getElementById("a-relacionado").value = a.id_relacionado || "";
+  document.getElementById("a-meta").value = a.meta_umbral || "";
+  document.getElementById("a-observaciones").value = a.observaciones || "";
+  document.getElementById("form-acuerdo").dataset.editing = agreementId;
+  showToast(`Editando ${agreementId}`);
+}
+function eliminarAcuerdo(agreementId) {
+  STATE.acuerdos = STATE.acuerdos.filter(x => x.agreement_id !== agreementId);
+  STATE.calendarioEjecucion = STATE.calendarioEjecucion.filter(x => x.agreement_id !== agreementId);
+  STATE.cuotas = STATE.cuotas.filter(x => x.agreement_id !== agreementId);
+  saveStore();
+  renderPanelAcuerdos();
+  showToast(`${agreementId} eliminado`);
+}
+
+/* ==========================================================================
+   ACUERDOS COMERCIALES — PANEL
+   ========================================================================== */
+function renderPanelAcuerdos() {
+  const box = document.getElementById("ac-panel-content");
+  if (!STATE.acuerdos.length) {
+    box.innerHTML = `<div class="card"><div class="empty-state"><strong>Aún no hay acuerdos</strong>Ve a "Registrar acuerdo" para capturar el primero.</div></div>`;
+    return;
+  }
+  const totales = { total: STATE.acuerdos.length,
+    APROBADO: STATE.acuerdos.filter(a => a.estatus === "APROBADO").length,
+    BLOQUEADO: STATE.acuerdos.filter(a => a.estatus === "BLOQUEADO").length };
+  const rows = STATE.acuerdos.map(a => `
+    <tr class="${a.estatus === 'APROBADO' ? 'row-success' : a.estatus === 'BLOQUEADO' ? 'row-danger' : ''}">
+      <td class="mono">${escapeHtml(a.agreement_id)}</td>
+      <td>${escapeHtml(a.pais)}</td>
+      <td>${escapeHtml(a.proveedor)}</td>
+      <td>${escapeHtml(a.tipo_acuerdo)}</td>
+      <td>${escapeHtml(a.tipo_valor)}</td>
+      <td class="tabular">${a.tipo_valor === "Monto fijo" ? fmtMoney(a.monto_total_negociacion) : "—"}</td>
+      <td class="tabular">${a.tipo_valor === "Monto variable" ? fmtPct(a.pct_acordado) + " · " + escapeHtml(a.base_variable||"") : "—"}</td>
+      <td>${escapeHtml(a.frecuencia_cobro)}</td>
+      <td class="tabular">${a.n_cobros_esperados}</td>
+      <td>${escapeHtml(a.area_confirma)}</td>
+      <td><span class="pill ${pillClassAcuerdo(a.estatus)}">${a.estatus}</span></td>
+      <td class="cell-muted">${escapeHtml(a.motivo_alerta)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editarAcuerdo('${a.agreement_id}')">Editar</button>
+        <button class="btn btn-danger-ghost btn-sm" onclick="eliminarAcuerdo('${a.agreement_id}')">Eliminar</button>
+      </td>
+    </tr>`).join("");
+  box.innerHTML = `
+    <div class="metrics-strip">
+      <div class="metric-tile"><div class="m-label">Total acuerdos</div><div class="m-value tabular">${totales.total}</div></div>
+      <div class="metric-tile accent-success"><div class="m-label">Aprobados</div><div class="m-value tabular">${totales.APROBADO}</div></div>
+      <div class="metric-tile accent-danger"><div class="m-label">Bloqueados</div><div class="m-value tabular">${totales.BLOQUEADO}</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Agreement ID</th><th>País</th><th>Proveedor</th><th>Tipo acuerdo</th><th>Tipo valor</th>
+          <th>Monto fijo</th><th>Variable</th><th>Frecuencia</th><th>N° cobros</th><th>Área confirma</th>
+          <th>Estatus</th><th>Motivo</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ==========================================================================
+   ACUERDOS COMERCIALES — CALENDARIOS DE EJECUCIÓN
+   ========================================================================== */
+function renderCalendarioEjecucion(area) {
+  const box = document.getElementById(area === "Marketing" ? "ac-mkt-content" : "ac-ops-content");
+  const filas = STATE.calendarioEjecucion.filter(f => f.area === area).map(f => {
+    const a = STATE.acuerdos.find(x => x.agreement_id === f.agreement_id) || {};
+    return { ...f, ...a, estatus_calc: calcularEstatusCalendarioEjecucion(f.agreement_id, f.ejecutado, f.fecha_esperada) };
+  });
+  if (!filas.length) {
+    box.innerHTML = `<div class="card"><div class="empty-state"><strong>Nada pendiente por ahora</strong>Aquí aparecerán los acuerdos APROBADOS cuya área que confirma ejecución sea ${escapeHtml(area)}.</div></div>`;
+    return;
+  }
+  const ejecutados = filas.filter(f => f.estatus_calc === "EJECUTADO").length;
+  const vencidos = filas.filter(f => f.estatus_calc === "VENCIDO / NO EJECUTADO").length;
+  const rows = filas.map(f => `
+    <tr>
+      <td class="mono">${escapeHtml(f.agreement_id)}</td>
+      <td>${escapeHtml(f.proveedor||"")}</td>
+      <td>${escapeHtml(f.tipo_acuerdo||"")}</td>
+      <td>${escapeHtml(f.descripcion||"")}</td>
+      <td>${escapeHtml(f.fecha_inicio||"")} → ${escapeHtml(f.fecha_fin||"")}</td>
+      <td>${escapeHtml(f.tipo_valor||"")}</td>
+      <td>${escapeHtml(f.responsable_ejecucion||"—")}</td>
+      <td><span class="pill ${pillClassEjec(f.estatus_calc)}">${f.estatus_calc}</span></td>
+      <td>${f.ejecutado === "Sí" ? "—" : `<button class="btn btn-ghost btn-sm" onclick="abrirConfirmarEjecucion('${escapeHtml(f.agreement_id)}','${area}')">Marcar ejecutado</button>`}</td>
+    </tr>`).join("");
+  box.innerHTML = `
+    <div class="metrics-strip">
+      <div class="metric-tile"><div class="m-label">Total</div><div class="m-value tabular">${filas.length}</div></div>
+      <div class="metric-tile accent-success"><div class="m-label">Ejecutados</div><div class="m-value tabular">${ejecutados}</div></div>
+      <div class="metric-tile accent-danger"><div class="m-label">Vencidos / no ejecutados</div><div class="m-value tabular">${vencidos}</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Agreement ID</th><th>Proveedor</th><th>Tipo</th><th>Descripción</th><th>Vigencia</th><th>Tipo valor</th><th>Responsable</th><th>Estatus</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div id="confirmar-ejecucion-box"></div>`;
+}
+function abrirConfirmarEjecucion(agreementId, area) {
+  const box = document.getElementById("confirmar-ejecucion-box");
+  box.innerHTML = `
+    <div class="card" style="margin-top:16px;">
+      <div class="field-group">
+        <div class="fg-title">Confirmar ejecución — ${escapeHtml(agreementId)}</div>
+        <div class="fg-grid">
+          <div class="field"><label>Responsable ejecución</label><input type="text" id="ce-responsable" value="${escapeHtml(currentUser()?.nombre_completo || "")}" /></div>
+          <div class="field"><label>Fecha de ejecución</label><input type="date" id="ce-fecha" value="${todayISO()}" /></div>
+          <div class="field" style="grid-column: span 2;"><label>Evidencia (correo, foto, acta o reporte)</label><input type="text" id="ce-evidencia" /></div>
+          <div class="field" style="grid-column: 1 / -1;"><label>Observaciones</label><textarea id="ce-observaciones"></textarea></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <span></span>
+        <button class="btn btn-primary" onclick="confirmarEjecucion('${agreementId}','${area}')">✅ Marcar como ejecutado</button>
+      </div>
+    </div>`;
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function confirmarEjecucion(agreementId, area) {
+  const f = STATE.calendarioEjecucion.find(x => x.agreement_id === agreementId && x.area === area);
+  if (!f) return;
+  f.responsable_ejecucion = document.getElementById("ce-responsable").value.trim();
+  f.ejecutado = "Sí";
+  f.fecha_ejecucion = document.getElementById("ce-fecha").value;
+  f.evidencia = document.getElementById("ce-evidencia").value.trim();
+  f.observaciones = document.getElementById("ce-observaciones").value.trim();
+  saveStore();
+  showToast(`${agreementId} marcado como ejecutado por ${area}`);
+  renderCalendarioEjecucion(area);
+}
+
+/* ==========================================================================
+   ACUERDOS COMERCIALES — CALENDARIO DE COBROS
+   ========================================================================== */
+function renderCalendarioCobros() {
+  const box = document.getElementById("ac-cobros-content");
+  if (!STATE.cuotas.length) {
+    box.innerHTML = `<div class="card"><div class="empty-state"><strong>Aún no hay cuotas</strong>Se generan automáticamente al aprobar un acuerdo.</div></div>`;
+    return;
+  }
+  const cuotas = STATE.cuotas.map(enriquecerCuota).sort((a,b) => a.fecha_esperada_cobro < b.fecha_esperada_cobro ? -1 : 1);
+  const devengadas = cuotas.filter(c => c.devengado === "Sí").length;
+  const vencidas = cuotas.filter(c => c.estatus_cuota === "VENCIDO").length;
+  const sinBase = cuotas.filter(c => c.estatus_cuota === "PENDIENTE BASE REAL").length;
+  const rows = cuotas.map(c => `
+    <tr>
+      <td class="mono">${escapeHtml(c.agreement_id)}</td>
+      <td class="tabular">${c.cuota_numero}</td>
+      <td>${escapeHtml(c.fecha_esperada_cobro)}</td>
+      <td>${escapeHtml(c.proveedor||"")}</td>
+      <td>${escapeHtml(c.tipo_acuerdo||"")}</td>
+      <td>${escapeHtml(c.tipo_valor)}</td>
+      <td class="tabular">${c.base_real_periodo != null ? fmtMoney(c.base_real_periodo) : "—"}</td>
+      <td class="tabular">${c.monto_esperado != null ? fmtMoney(c.monto_esperado) : "—"}</td>
+      <td>${escapeHtml(c.ejecucion_confirmada)}</td>
+      <td>${escapeHtml(c.devengado)}</td>
+      <td class="tabular">${fmtMoney(c.monto_cobrado_cuota||0)}</td>
+      <td class="tabular">${fmtMoney(c.pendiente_cuota||0)}</td>
+      <td><span class="pill ${pillClassCuota(c.estatus_cuota)}">${escapeHtml(c.estatus_cuota)}</span></td>
+      <td class="tabular">${c.dias_vencido||0}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="abrirRegistrarCobro('${escapeHtml(c.agreement_id)}',${c.cuota_numero})">Registrar</button></td>
+    </tr>`).join("");
+  box.innerHTML = `
+    <div class="metrics-strip">
+      <div class="metric-tile"><div class="m-label">Total cuotas</div><div class="m-value tabular">${cuotas.length}</div></div>
+      <div class="metric-tile accent-success"><div class="m-label">Devengadas</div><div class="m-value tabular">${devengadas}</div></div>
+      <div class="metric-tile accent-danger"><div class="m-label">Vencidas</div><div class="m-value tabular">${vencidas}</div></div>
+      <div class="metric-tile accent-warning"><div class="m-label">Pendiente base real</div><div class="m-value tabular">${sinBase}</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Agreement</th><th>Cuota</th><th>Fecha esperada</th><th>Proveedor</th><th>Tipo acuerdo</th><th>Tipo valor</th>
+          <th>Base real</th><th>Monto esperado</th><th>Ejecución</th><th>Devengado</th><th>Cobrado</th><th>Pendiente</th><th>Estatus</th><th>Días venc.</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div id="registrar-cobro-box"></div>`;
+}
+function abrirRegistrarCobro(agreementId, cuotaNumero) {
+  const c = STATE.cuotas.find(x => x.agreement_id === agreementId && x.cuota_numero === cuotaNumero);
+  if (!c) return;
+  const box = document.getElementById("registrar-cobro-box");
+  box.innerHTML = `
+    <div class="card" style="margin-top:16px;">
+      <div class="field-group">
+        <div class="fg-title">Registrar cobro — ${escapeHtml(agreementId)} · cuota ${cuotaNumero}</div>
+        <div class="fg-grid">
+          ${c.tipo_valor === "Monto variable" ? `<div class="field"><label>Base real período</label><input type="number" step="0.01" min="0" id="rc-base" value="${c.base_real_periodo ?? ""}" /></div>` : ""}
+          <div class="field"><label>Monto cobrado cuota</label><input type="number" step="0.01" min="0" id="rc-monto" value="${c.monto_cobrado_cuota || 0}" /></div>
+          <div class="field"><label>Fecha cobro</label><input type="date" id="rc-fecha" value="${todayISO()}" /></div>
+          <div class="field"><label>Documento / referencia</label><input type="text" id="rc-doc" value="${escapeHtml(c.documento_referencia||"")}" /></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <span></span>
+        <button class="btn btn-primary" onclick="guardarCobro('${agreementId}',${cuotaNumero})">💾 Guardar cobro</button>
+      </div>
+    </div>`;
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function guardarCobro(agreementId, cuotaNumero) {
+  const c = STATE.cuotas.find(x => x.agreement_id === agreementId && x.cuota_numero === cuotaNumero);
+  if (!c) return;
+  if (c.tipo_valor === "Monto variable") {
+    const baseEl = document.getElementById("rc-base");
+    c.base_real_periodo = baseEl.value === "" ? null : parseFloat(baseEl.value);
+  }
+  c.monto_cobrado_cuota = parseFloat(document.getElementById("rc-monto").value) || 0;
+  c.fecha_cobro = document.getElementById("rc-fecha").value;
+  c.documento_referencia = document.getElementById("rc-doc").value.trim();
+  saveStore();
+  showToast("Cobro actualizado");
+  renderCalendarioCobros();
+}
+
+/* ==========================================================================
+   ACUERDOS COMERCIALES — RESUMEN CCO
+   ========================================================================== */
+function renderResumenCCO() {
+  const box = document.getElementById("ac-resumen-content");
+  const cuotas = STATE.cuotas.map(enriquecerCuota);
+  const mkt = STATE.calendarioEjecucion.filter(f => f.area === "Marketing").map(f => ({ ...f, estatus_calc: calcularEstatusCalendarioEjecucion(f.agreement_id, f.ejecutado, f.fecha_esperada) }));
+  const ops = STATE.calendarioEjecucion.filter(f => f.area === "Operaciones").map(f => ({ ...f, estatus_calc: calcularEstatusCalendarioEjecucion(f.agreement_id, f.ejecutado, f.fecha_esperada) }));
+
+  const montoFijoNegociado = STATE.acuerdos.filter(a => a.tipo_valor === "Monto fijo" && a.estatus === "APROBADO").reduce((s,a) => s + (a.monto_total_negociacion||0), 0);
+  const variableDevengado = cuotas.filter(c => c.tipo_valor === "Monto variable" && c.devengado === "Sí").reduce((s,c) => s + (c.monto_esperado||0), 0);
+  const totalDevengado = cuotas.filter(c => c.devengado === "Sí").reduce((s,c) => s + (c.monto_esperado||0), 0);
+  const totalCobrado = cuotas.reduce((s,c) => s + (c.monto_cobrado_cuota||0), 0);
+  const pendienteDevengado = cuotas.reduce((s,c) => s + (c.pendiente_cuota||0), 0);
+  const pctCaptura = totalDevengado ? totalCobrado / totalDevengado : 0;
+
+  const acuerdosBloqueados = STATE.acuerdos.filter(a => a.estatus === "BLOQUEADO").length;
+  const mktPendientes = mkt.filter(f => f.estatus_calc === "PENDIENTE").length;
+  const opsPendientes = ops.filter(f => f.estatus_calc === "PENDIENTE").length;
+  const cuotasVencidas = cuotas.filter(c => c.estatus_cuota === "VENCIDO").length;
+  const montoVencido = cuotas.filter(c => c.estatus_cuota === "VENCIDO").reduce((s,c) => s + (c.pendiente_cuota||0), 0);
+  const variablesSinBase = cuotas.filter(c => c.estatus_cuota === "PENDIENTE BASE REAL").length;
+  const en30dias = (d) => { const dd = parseISO(d); const h = hoyDate(); const lim = new Date(h); lim.setDate(lim.getDate()+30); return dd >= h && dd <= lim; };
+  const proximos30 = cuotas.filter(c => en30dias(c.fecha_esperada_cobro)).length;
+
+  if (!STATE.acuerdos.length) {
+    box.innerHTML = `<div class="card"><div class="empty-state"><strong>Todavía no hay acuerdos</strong>El tablero se llena a medida que se registran acuerdos comerciales.</div></div>`;
+    return;
+  }
+
+  const kv = (k,v) => `<div class="kv-row"><span class="k">${escapeHtml(k)}</span><span class="v">${v}</span></div>`;
+  box.innerHTML = `
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+      <div class="card"><div class="field-group">
+        <div class="fg-title">KPI</div>
+        ${kv("Monto fijo negociado", fmtMoney(montoFijoNegociado))}
+        ${kv("Variable devengado", fmtMoney(variableDevengado))}
+        ${kv("Total devengado", fmtMoney(totalDevengado))}
+        ${kv("Total cobrado", fmtMoney(totalCobrado))}
+        ${kv("Pendiente devengado", fmtMoney(pendienteDevengado))}
+        ${kv("% captura", fmtPct(pctCaptura))}
+      </div></div>
+      <div class="card"><div class="field-group">
+        <div class="fg-title">Alertas</div>
+        ${kv("Acuerdos bloqueados", acuerdosBloqueados)}
+        ${kv("MKT pendientes", mktPendientes)}
+        ${kv("Ops pendientes", opsPendientes)}
+        ${kv("Cuotas vencidas", cuotasVencidas)}
+        ${kv("Monto vencido", fmtMoney(montoVencido))}
+        ${kv("Variables sin base real", variablesSinBase)}
+        ${kv("Cuotas próximos 30 días", proximos30)}
+      </div></div>
+    </div>
+    <div class="demo-flag" style="margin-top:18px; max-width:70ch;">
+      El sistema separa claramente tres momentos: Comercial define el acuerdo y sus economics; Marketing/Operaciones
+      confirman ejecución; Finanzas administra cada cuota en el calendario de cobros. Para acuerdos variables, el
+      monto esperado nace únicamente cuando Finanzas carga la base real del período.
+    </div>`;
+}
+
+/* ==========================================================================
    BOOT
    ========================================================================== */
 function boot() {
@@ -1060,8 +1822,10 @@ function boot() {
   fillSelect("f-objetivo", CAT.OBJETIVOS);
   fillSelect("f-mecanica", CAT.MECANICAS);
   fillSelect("f-canal", CAT.CANALES);
+  fillSelectAcuerdos();
 
   resetForm();
+  resetFormAcuerdo();
   goPage("registrar");
 }
 
