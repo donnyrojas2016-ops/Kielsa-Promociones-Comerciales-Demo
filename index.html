@@ -1,1 +1,1837 @@
+<title>Gobierno de Promociones</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+  /* ============================== TOKENS ============================== */
+  :root {
+    --bg: #F5F6F3;
+    --surface: #FFFFFF;
+    --surface-alt: #ECEFEA;
+    --surface-raised: #FFFFFF;
+    --ink: #16211D;
+    --ink-muted: #57635C;
+    --ink-faint: #8A948E;
+    --border: #DBE0D9;
+    --border-strong: #C3CAC1;
+
+    --accent: #1B6E68;
+    --accent-strong: #0E4D48;
+    --accent-soft: #E3F0EE;
+    --accent-ink: #ffffff;
+
+    --success: #2E7D4F;
+    --success-soft: #E3F3E8;
+    --success-border: #BFE0CB;
+
+    --warning: #B8721C;
+    --warning-soft: #FBF0DE;
+    --warning-border: #EFD6A6;
+
+    --danger: #B03A2E;
+    --danger-soft: #FBE7E3;
+    --danger-border: #EFC3BA;
+
+    --shadow-sm: 0 1px 2px rgba(23, 33, 29, 0.06);
+    --shadow-md: 0 6px 20px -6px rgba(23, 33, 29, 0.16);
+    --radius: 10px;
+    --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+    --font-body: "Public Sans", -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101A17;
+      --surface: #172420;
+      --surface-alt: #1D2B26;
+      --surface-raised: #1F2E29;
+      --ink: #ECF1EE;
+      --ink-muted: #9DAAA3;
+      --ink-faint: #6C7A73;
+      --border: #2B3A34;
+      --border-strong: #3B4C45;
+
+      --accent: #4FB3A6;
+      --accent-strong: #6FC9BC;
+      --accent-soft: #1D3A36;
+      --accent-ink: #0C1512;
+
+      --success: #6FC98D;
+      --success-soft: #1B3324;
+      --success-border: #2C4E38;
+
+      --warning: #E3A855;
+      --warning-soft: #3A2C15;
+      --warning-border: #5A4423;
+
+      --danger: #E38177;
+      --danger-soft: #3B211D;
+      --danger-border: #5C332C;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 10px 30px -8px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #101A17;
+    --surface: #172420;
+    --surface-alt: #1D2B26;
+    --surface-raised: #1F2E29;
+    --ink: #ECF1EE;
+    --ink-muted: #9DAAA3;
+    --ink-faint: #6C7A73;
+    --border: #2B3A34;
+    --border-strong: #3B4C45;
+
+    --accent: #4FB3A6;
+    --accent-strong: #6FC9BC;
+    --accent-soft: #1D3A36;
+    --accent-ink: #0C1512;
+
+    --success: #6FC98D;
+    --success-soft: #1B3324;
+    --success-border: #2C4E38;
+
+    --warning: #E3A855;
+    --warning-soft: #3A2C15;
+    --warning-border: #5A4423;
+
+    --danger: #E38177;
+    --danger-soft: #3B211D;
+    --danger-border: #5C332C;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 10px 30px -8px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ============================== RESET / BASE ============================== */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0; }
+  button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  ::selection { background: var(--accent-soft); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  /* ============================== APP SHELL ============================== */
+  #app { display: none; min-height: 100vh; }
+  #app.ready { display: grid; grid-template-columns: 248px 1fr; }
+
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .brand { display: flex; flex-direction: column; gap: 2px; padding: 0 6px; }
+  .brand .eyebrow { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); }
+  .brand .name { font-family: var(--font-display); font-size: 19px; font-weight: 600; }
+  .brand .sub { font-size: 11.5px; color: var(--ink-faint); }
+
+  .nav-section {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-faint); padding: 12px 10px 4px; font-weight: 600;
+  }
+  .nav-section:first-child { padding-top: 0; }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav button {
+    all: unset;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    color: var(--ink-muted);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .nav button:hover { background: var(--surface-alt); color: var(--ink); }
+  .nav button.active { background: var(--accent-soft); color: var(--accent-strong); }
+  .nav .icon { width: 16px; text-align: center; font-family: var(--font-mono); font-size: 12px; }
+
+  .sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+  .user-card {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 10px; border-radius: 8px; background: var(--surface-alt);
+    border: 1px solid var(--border);
+  }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--accent);
+    color: var(--accent-ink); display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 12px; flex-shrink: 0;
+  }
+  .user-meta { min-width: 0; }
+  .user-meta .u-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-meta .u-role { font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+  .link-btn {
+    all: unset; cursor: pointer; font-size: 12px; color: var(--ink-faint); padding: 4px 6px;
+  }
+  .link-btn:hover { color: var(--danger); }
+
+  .demo-flag {
+    font-size: 10.5px; color: var(--ink-faint); border: 1px dashed var(--border-strong);
+    border-radius: 7px; padding: 7px 9px; line-height: 1.4;
+  }
+
+  .main { padding: 30px 40px 70px; max-width: 1180px; }
+  .page-head { margin-bottom: 26px; display: flex; align-items: baseline; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .page-head h1 { font-size: 27px; }
+  .page-head p { margin: 6px 0 0; color: var(--ink-muted); font-size: 13.5px; max-width: 62ch; }
+
+  /* ============================== CARDS / FORM ============================== */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  .field-group { padding: 20px 22px; }
+  .field-group + .field-group { border-top: 1px solid var(--border); }
+  .fg-title {
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 14px; font-weight: 600;
+  }
+  .fg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; font-weight: 500; color: var(--ink-muted); }
+  .field .req { color: var(--danger); }
+  .field input[type="text"], .field input[type="number"], .field input[type="date"],
+  .field select, .field textarea {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    padding: 8px 10px;
+    color: var(--ink);
+    width: 100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 56px; font-family: var(--font-body); }
+  .field .hint { font-size: 11px; color: var(--ink-faint); }
+  .field.disabled input, .field.disabled select { background: var(--surface-alt); color: var(--ink-faint); }
+
+  .form-actions {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 18px 22px; border-top: 1px solid var(--border); background: var(--surface-alt);
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+
+  .btn {
+    all: unset; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 9px 16px; border-radius: 7px; font-size: 13px; font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { background: var(--accent-strong); }
+  .btn-ghost { background: transparent; border-color: var(--border-strong); color: var(--ink); }
+  .btn-ghost:hover { background: var(--surface-alt); }
+  .btn-danger-ghost { background: transparent; border-color: var(--danger-border); color: var(--danger); }
+  .btn-danger-ghost:hover { background: var(--danger-soft); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-sm { padding: 6px 11px; font-size: 12px; }
+
+  .error-box {
+    border: 1px solid var(--danger-border); background: var(--danger-soft); color: var(--danger);
+    border-radius: 8px; padding: 12px 14px; font-size: 12.5px; margin-bottom: 16px;
+  }
+  .error-box ul { margin: 4px 0 0; padding-left: 18px; }
+
+  /* ============================== PILLS / STATUS ============================== */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px;
+    border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill-success { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
+  .pill-warning { background: var(--warning-soft); color: var(--warning); border-color: var(--warning-border); }
+  .pill-danger { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-border); }
+
+  .result-banner {
+    display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: var(--radius);
+    border: 1px solid var(--border); margin-bottom: 18px; background: var(--surface);
+  }
+  .result-banner.success { border-color: var(--success-border); background: var(--success-soft); }
+  .result-banner.warning { border-color: var(--warning-border); background: var(--warning-soft); }
+  .result-banner.danger { border-color: var(--danger-border); background: var(--danger-soft); }
+  .result-banner .rb-title { font-weight: 700; font-size: 14px; }
+  .result-banner .rb-sub { font-size: 12.5px; color: var(--ink-muted); }
+
+  /* ============================== METRICS ============================== */
+  .metrics-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 22px; }
+  .metric-tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; box-shadow: var(--shadow-sm);
+  }
+  .metric-tile .m-label { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; }
+  .metric-tile .m-value { font-family: var(--font-mono); font-size: 22px; font-weight: 600; }
+  .metric-tile.accent-success .m-value { color: var(--success); }
+  .metric-tile.accent-warning .m-value { color: var(--warning); }
+  .metric-tile.accent-danger .m-value { color: var(--danger); }
+
+  /* ============================== TABLE ============================== */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; min-width: 760px; }
+  thead th {
+    text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--ink-faint); font-weight: 600; padding: 10px 14px; border-bottom: 1px solid var(--border);
+    background: var(--surface-alt); white-space: nowrap; position: sticky; top: 0;
+  }
+  tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 13px; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-alt); }
+  tbody tr.row-danger { box-shadow: inset 3px 0 0 var(--danger); }
+  tbody tr.row-warning { box-shadow: inset 3px 0 0 var(--warning); }
+  tbody tr.row-success { box-shadow: inset 3px 0 0 var(--success); }
+  .cell-muted { color: var(--ink-faint); }
+  .empty-state {
+    padding: 46px 20px; text-align: center; color: var(--ink-faint); font-size: 13px;
+  }
+  .empty-state strong { display: block; color: var(--ink-muted); font-size: 14.5px; margin-bottom: 4px; font-family: var(--font-display); font-weight: 600;}
+
+  .filters-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: flex-end; }
+  .filter-field { display: flex; flex-direction: column; gap: 4px; }
+  .filter-field label { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+  .filter-field select { border: 1px solid var(--border-strong); border-radius: 7px; padding: 7px 9px; background: var(--surface); min-width: 150px; }
+
+  .section-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin: 32px 0 12px; }
+  .section-sub { font-size: 12.5px; color: var(--ink-muted); margin: -6px 0 14px; }
+
+  /* ============================== LOGIN ============================== */
+  #login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+    background:
+      radial-gradient(600px 300px at 15% 10%, var(--accent-soft), transparent),
+      var(--bg);
+  }
+  .login-card {
+    width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; box-shadow: var(--shadow-md); padding: 30px 28px 26px;
+  }
+  .login-card .brand { padding: 0; margin-bottom: 22px; }
+  .login-card .brand .name { font-size: 21px; }
+  .tab-row { display: flex; gap: 4px; background: var(--surface-alt); padding: 3px; border-radius: 8px; margin-bottom: 18px; }
+  .tab-row button {
+    all: unset; flex: 1; text-align: center; padding: 7px 0; border-radius: 6px; font-size: 12.5px;
+    font-weight: 600; color: var(--ink-muted); cursor: pointer;
+  }
+  .tab-row button.active { background: var(--surface); color: var(--accent-strong); box-shadow: var(--shadow-sm); }
+  .login-card form { display: flex; flex-direction: column; gap: 12px; }
+  .login-note { font-size: 11px; color: var(--ink-faint); line-height: 1.5; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+  /* ============================== BADGES / MISC ============================== */
+  .kv-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; padding: 3px 0; }
+  .kv-row .k { color: var(--ink-faint); }
+  .kv-row .v { font-family: var(--font-mono); font-weight: 500; }
+
+  .toast {
+    position: fixed; bottom: 22px; right: 22px; background: var(--ink); color: var(--bg);
+    padding: 11px 16px; border-radius: 8px; font-size: 12.5px; box-shadow: var(--shadow-md);
+    opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity .18s, transform .18s;
+    z-index: 50; max-width: 320px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 860px) {
+    #app.ready { grid-template-columns: 1fr; }
+    .sidebar { position: relative; height: auto; }
+    .main { padding: 22px 18px 60px; }
+  }
+</style>
+
+<!-- ============================================================= LOGIN ============================================================= -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="brand">
+      <div class="eyebrow">Kielsa · Comercial</div>
+      <div class="name">Gobierno de Promociones</div>
+    </div>
+
+    <div class="tab-row">
+      <button id="tab-login" class="active" onclick="switchTab('login')">Ingresar</button>
+      <button id="tab-signup" onclick="switchTab('signup')">Crear cuenta demo</button>
+    </div>
+
+    <form id="form-login" onsubmit="return handleLogin(event)">
+      <div class="field">
+        <label>Usuario</label>
+        <input type="text" id="login-username" autocomplete="username" placeholder="ej: mgonzalez" />
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="text" id="login-password" placeholder="cualquier valor en esta vista previa" />
+      </div>
+      <button type="submit" class="btn btn-primary" style="justify-content:center; margin-top:4px;">Ingresar</button>
+    </form>
+
+    <form id="form-signup" style="display:none" onsubmit="return handleSignup(event)">
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" id="signup-name" placeholder="ej: María González" />
+      </div>
+      <div class="field">
+        <label>Usuario</label>
+        <input type="text" id="signup-username" placeholder="ej: mgonzalez" />
+      </div>
+      <div class="field">
+        <label>Rol</label>
+        <select id="signup-role">
+          <option value="comercial">Comercial</option>
+          <option value="aprobador">Aprobador</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary" style="justify-content:center; margin-top:4px;">Crear y entrar</button>
+    </form>
+
+    <p class="login-note">
+      Esta es una <strong>vista previa de demostración</strong>: los usuarios y promociones se guardan solo en este navegador (no hay servidor real todavía). En el sistema definitivo, las contraseñas se cifran y los datos se comparten entre todo el equipo desde un servidor central.
+    </p>
+  </div>
+</div>
+
+<!-- ============================================================= APP ============================================================= -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="eyebrow">Kielsa · Comercial</div>
+      <div class="name">Promociones</div>
+      <div class="sub">Vista previa de demostración</div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section">Promociones</div>
+      <button data-page="registrar" onclick="goPage('registrar')"><span class="icon">＋</span> Registrar promoción</button>
+      <button data-page="panel" onclick="goPage('panel')"><span class="icon">▤</span> Panel de promociones</button>
+      <button data-page="carga" onclick="goPage('carga')"><span class="icon">✓</span> Listas para cargar</button>
+
+      <div class="nav-section">Acuerdos comerciales</div>
+      <button data-page="ac-registrar" onclick="goPage('ac-registrar')"><span class="icon">＋</span> Registrar acuerdo</button>
+      <button data-page="ac-panel" onclick="goPage('ac-panel')"><span class="icon">▤</span> Panel de acuerdos</button>
+      <button data-page="ac-mkt" onclick="goPage('ac-mkt')"><span class="icon">◆</span> Calendario Marketing</button>
+      <button data-page="ac-ops" onclick="goPage('ac-ops')"><span class="icon">◆</span> Calendario Operaciones</button>
+      <button data-page="ac-cobros" onclick="goPage('ac-cobros')"><span class="icon">$</span> Calendario de cobros</button>
+      <button data-page="ac-resumen" onclick="goPage('ac-resumen')"><span class="icon">◈</span> Resumen CCO</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="demo-flag">Modo demostración — datos guardados solo en este navegador.</div>
+      <div class="user-card">
+        <div class="user-avatar" id="user-avatar">–</div>
+        <div class="user-meta">
+          <div class="u-name" id="user-name">—</div>
+          <div class="u-role" id="user-role">—</div>
+        </div>
+      </div>
+      <button class="link-btn" onclick="logout()" style="align-self:flex-start;">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- ---------------- PÁGINA: REGISTRAR ---------------- -->
+    <section id="page-registrar">
+      <div class="page-head">
+        <div>
+          <h1>Registrar promoción comercial</h1>
+          <p>Captura los datos de la promoción. El margen, el funding y el estatus de aprobación se calculan automáticamente al guardar, con las mismas reglas de la plantilla de control.</p>
+        </div>
+      </div>
+
+      <div id="registrar-result"></div>
+      <div id="registrar-errors"></div>
+
+      <form id="form-promo" class="card" onsubmit="return handleGuardarPromo(event)">
+        <div class="field-group">
+          <div class="fg-title">Identificación</div>
+          <div class="fg-grid">
+            <div class="field"><label>Promo ID</label><input type="text" id="f-promo-id" class="mono" /></div>
+            <div class="field"><label>País <span class="req">*</span></label>
+              <select id="f-pais"></select>
+            </div>
+            <div class="field"><label>Comercial <span class="req">*</span></label><input type="text" id="f-comercial" /></div>
+            <div class="field"><label>Fecha solicitud <span class="req">*</span></label><input type="date" id="f-fecha-solicitud" /></div>
+            <div class="field"><label>Objetivo primario <span class="req">*</span></label><select id="f-objetivo"></select></div>
+            <div class="field"><label>Mecánica <span class="req">*</span></label><select id="f-mecanica"></select></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">Producto / proveedor</div>
+          <div class="fg-grid">
+            <div class="field"><label>Proveedor <span class="req">*</span></label><input type="text" id="f-proveedor" /></div>
+            <div class="field"><label>Laboratorio / Marca <span class="req">*</span></label><input type="text" id="f-marca" /></div>
+            <div class="field"><label>SKU <span class="req">*</span></label><input type="text" id="f-sku" class="mono" /></div>
+            <div class="field"><label>Descripción <span class="req">*</span></label><input type="text" id="f-descripcion" /></div>
+            <div class="field"><label>Categoría <span class="req">*</span></label><input type="text" id="f-categoria" placeholder="OTC / Dermo / Baby" /></div>
+            <div class="field"><label>Canal / Tiendas <span class="req">*</span></label><select id="f-canal" onchange="toggleTiendaField()"></select></div>
+            <div class="field" id="field-tienda"><label>Número de tienda</label><input type="text" id="f-tienda" placeholder="101, 125, 208" /><span class="hint">Obligatorio solo si el canal es "Tiendas seleccionadas".</span></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">Vigencia</div>
+          <div class="fg-grid">
+            <div class="field"><label>Fecha inicio <span class="req">*</span></label><input type="date" id="f-fecha-inicio" /></div>
+            <div class="field"><label>Fecha fin <span class="req">*</span></label><input type="date" id="f-fecha-fin" /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">Precios y unidades</div>
+          <div class="fg-grid">
+            <div class="field"><label>Precio regular <span class="req">*</span></label><input type="number" step="0.01" min="0" id="f-precio-regular" oninput="livePreview()" /></div>
+            <div class="field"><label>Costo unitario neto <span class="req">*</span></label><input type="number" step="0.01" min="0" id="f-costo" oninput="livePreview()" /></div>
+            <div class="field"><label>Precio promocional <span class="req">*</span></label><input type="number" step="0.01" min="0" id="f-precio-promo" oninput="livePreview()" /></div>
+            <div class="field"><label>Unidades baseline <span class="req">*</span></label><input type="number" step="1" min="0" id="f-uds-base" oninput="livePreview()" /></div>
+            <div class="field"><label>Unidades esperadas promo <span class="req">*</span></label><input type="number" step="1" min="0" id="f-uds-promo" oninput="livePreview()" /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">Funding del proveedor</div>
+          <div class="fg-grid">
+            <div class="field"><label>Funding proveedor / ud. <span class="req">*</span></label><input type="number" step="0.01" min="0" id="f-funding" oninput="livePreview()" /></div>
+            <div class="field"><label>¿Aprobación por escrito? <span class="req">*</span></label>
+              <select id="f-aprobacion-escrita" onchange="livePreview()">
+                <option value="Sí">Sí</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="field"><label>Guardrail margen mínimo % <span class="req">*</span></label><input type="number" step="0.01" min="0" max="1" id="f-guardrail" value="0.10" oninput="livePreview()" /><span class="hint">Ej: 0.10 = 10%</span></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">Aprobación y notas</div>
+          <div class="fg-grid">
+            <div class="field"><label>Aprobador (si aplica)</label><input type="text" id="f-aprobador" /></div>
+            <div class="field" style="grid-column: 1 / -1;"><label>Observaciones</label><textarea id="f-observaciones"></textarea></div>
+          </div>
+        </div>
+
+        <div class="field-group" style="background:var(--surface-alt); border-top:1px solid var(--border);">
+          <div class="fg-title">Vista previa en vivo</div>
+          <div class="metrics-strip" id="live-metrics" style="margin-bottom:0;"></div>
+        </div>
+
+        <div class="form-actions">
+          <span style="font-size:11.5px; color:var(--ink-faint);">Los campos marcados con <span class="req">*</span> son obligatorios.</span>
+          <button type="submit" class="btn btn-primary">Calcular y guardar promoción</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ---------------- PÁGINA: PANEL ---------------- -->
+    <section id="page-panel" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Panel de promociones</h1>
+          <p>Todas las promociones registradas, con su estatus de gobernanza y motivo.</p>
+        </div>
+      </div>
+      <div id="panel-content"></div>
+    </section>
+
+    <!-- ---------------- PÁGINA: CARGA ---------------- -->
+    <section id="page-carga" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Listas para cargar — Data Maestra</h1>
+          <p>Solo promociones con estatus <strong>APROBADA</strong>. Desde aquí se exporta el archivo para cargar al sistema contable y se marca cada una como cargada.</p>
+        </div>
+      </div>
+      <div id="carga-content"></div>
+    </section>
+
+    <!-- ---------------- PÁGINA: REGISTRAR ACUERDO ---------------- -->
+    <section id="page-ac-registrar" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Registrar acuerdo comercial</h1>
+          <p>Rebates, incentivos, marketing funding, renta de espacio y otros acuerdos con proveedores. La aprobación y las cuotas de cobro se calculan automáticamente al guardar.</p>
+        </div>
+      </div>
+
+      <div id="ac-registrar-result"></div>
+      <div id="ac-registrar-errors"></div>
+
+      <form id="form-acuerdo" class="card" onsubmit="return handleGuardarAcuerdo(event)">
+        <div class="field-group">
+          <div class="fg-title">1 · Identificación</div>
+          <div class="fg-grid">
+            <div class="field"><label>Agreement ID</label><input type="text" id="a-id" class="mono" /></div>
+            <div class="field"><label>País <span class="req">*</span></label><select id="a-pais"></select></div>
+            <div class="field"><label>Responsable Comercial <span class="req">*</span></label><input type="text" id="a-responsable" /></div>
+            <div class="field"><label>Proveedor <span class="req">*</span></label><input type="text" id="a-proveedor" /></div>
+            <div class="field"><label>Tipo de acuerdo <span class="req">*</span></label><select id="a-tipo-acuerdo"></select></div>
+            <div class="field" style="grid-column: span 2;"><label>Descripción del acuerdo <span class="req">*</span></label><input type="text" id="a-descripcion" /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">2 · Economía del acuerdo</div>
+          <div class="fg-grid">
+            <div class="field"><label>Tipo de valor <span class="req">*</span></label><select id="a-tipo-valor" onchange="toggleTipoValor()"></select></div>
+            <div class="field" id="a-field-monto-fijo"><label>Monto total negociación <span class="req">*</span></label><input type="number" step="0.01" min="0" id="a-monto-total" /></div>
+            <div class="field" id="a-field-base-variable" style="display:none;"><label>Base variable <span class="req">*</span></label><select id="a-base-variable" onchange="toggleBaseOtro()"></select></div>
+            <div class="field" id="a-field-detalle-base" style="display:none;"><label>Detalle base (si Otro) <span class="req">*</span></label><input type="text" id="a-detalle-base" placeholder="ej: compras netas sin impuestos" /></div>
+            <div class="field" id="a-field-pct" style="display:none;"><label>% acordado <span class="req">*</span></label><input type="number" step="0.01" min="0" max="1" id="a-pct" placeholder="ej: 0.03 = 3%" /></div>
+            <div class="field"><label>Moneda <span class="req">*</span></label><select id="a-moneda"></select></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">3 · Vigencia y cobro</div>
+          <div class="fg-grid">
+            <div class="field"><label>Fecha inicio <span class="req">*</span></label><input type="date" id="a-fecha-inicio" /></div>
+            <div class="field"><label>Fecha fin <span class="req">*</span></label><input type="date" id="a-fecha-fin" /></div>
+            <div class="field"><label>Frecuencia de cobro <span class="req">*</span></label><select id="a-frecuencia"></select></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">4 · Ejecución y governance</div>
+          <div class="fg-grid">
+            <div class="field"><label>Área que confirma ejecución <span class="req">*</span></label><select id="a-area-confirma" onchange="toggleCondicionComercial()"></select></div>
+            <div class="field" id="a-field-condicion" style="display:none;"><label>¿Condición / ejecución confirmada? <span class="req">*</span></label><select id="a-condicion"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+            <div class="field"><label>¿Aprobación escrita del proveedor? <span class="req">*</span></label><select id="a-aprobacion"><option value="Sí">Sí</option><option value="No">No</option></select></div>
+            <div class="field"><label>Referencia aprobación / documento</label><input type="text" id="a-referencia" /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="fg-title">Opcional</div>
+          <div class="fg-grid">
+            <div class="field"><label>Agreement / Promo ID relacionado</label><input type="text" id="a-relacionado" /></div>
+            <div class="field"><label>Meta / Umbral (si aplica)</label><input type="text" id="a-meta" /></div>
+            <div class="field" style="grid-column: 1 / -1;"><label>Observaciones</label><textarea id="a-observaciones"></textarea></div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <span style="font-size:11.5px; color:var(--ink-faint);">Los campos marcados con <span class="req">*</span> son obligatorios.</span>
+          <button type="submit" class="btn btn-primary">Calcular y guardar acuerdo</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ---------------- PÁGINA: PANEL DE ACUERDOS ---------------- -->
+    <section id="page-ac-panel" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Panel de acuerdos comerciales</h1>
+          <p>Todos los acuerdos registrados, con su estatus de gobernanza.</p>
+        </div>
+      </div>
+      <div id="ac-panel-content"></div>
+    </section>
+
+    <!-- ---------------- PÁGINA: CALENDARIO MARKETING ---------------- -->
+    <section id="page-ac-mkt" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Calendario de ejecución — Marketing</h1>
+          <p>Acuerdos APROBADOS cuya área que confirma ejecución es Marketing. Trabaja por fecha esperada.</p>
+        </div>
+      </div>
+      <div id="ac-mkt-content"></div>
+    </section>
+
+    <!-- ---------------- PÁGINA: CALENDARIO OPERACIONES ---------------- -->
+    <section id="page-ac-ops" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Calendario de ejecución — Operaciones</h1>
+          <p>Acuerdos APROBADOS cuya área que confirma ejecución es Operaciones. Trabaja por fecha esperada.</p>
+        </div>
+      </div>
+      <div id="ac-ops-content"></div>
+    </section>
+
+    <!-- ---------------- PÁGINA: CALENDARIO DE COBROS ---------------- -->
+    <section id="page-ac-cobros" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Calendario de cobros — Finanzas</h1>
+          <p>Una fila por cuota esperada. Para acuerdos variables, carga la base real del período para que el sistema calcule el monto esperado.</p>
+        </div>
+      </div>
+      <div id="ac-cobros-content"></div>
+    </section>
+
+    <!-- ---------------- PÁGINA: RESUMEN CCO ---------------- -->
+    <section id="page-ac-resumen" style="display:none;">
+      <div class="page-head">
+        <div>
+          <h1>Resumen — Control Tower CCO</h1>
+          <p>Comercial define el acuerdo, Marketing/Operaciones confirman ejecución, Finanzas administra cada cuota.</p>
+        </div>
+      </div>
+      <div id="ac-resumen-content"></div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==========================================================================
+   CATÁLOGOS — idénticos a catalogos.py
+   ========================================================================== */
+const CAT = {
+  PAISES: ["HN", "CR", "GT", "SV", "NI"],
+  OBJETIVOS: ["Tráfico","Competitividad","Incrementar basket","Sell-through","Liquidar inventario","Lanzamiento","Fidelización","Desarrollo de categoría"],
+  MECANICAS: ["% descuento","Precio especial","2x1","Bundle","Segunda unidad","Loyalty","Cupón","Otro"],
+  CANALES: ["Todos los canales","Todas las tiendas","Tiendas seleccionadas","E-commerce","App","Call Center","Marketplace"],
+  TIPOS_ACUERDO: ["Rebate","Incentivo por volumen","Marketing Funding","Promotional Funding","Renta de espacio","Activación / Evento","Digital","Listing Fee","Exclusividad","Otro"],
+  TIPOS_VALOR: ["Monto fijo","Monto variable"],
+  BASES_VARIABLES: ["Sell In","Sell Out","Otro"],
+  FRECUENCIAS: ["Mensual","Trimestral","Semestral","Anual","Único"],
+  MONEDAS: ["HNL","USD","CRC","GTQ","NIO"],
+  AREAS_CONFIRMAN: ["No aplica","Marketing","Operaciones","Comercial"],
+};
+const FREQ_MESES = { "Mensual": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
+
+const STORE_KEY = "kielsa_promo_demo_v1";
+
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      s.acuerdos = s.acuerdos || [];
+      s.calendarioEjecucion = s.calendarioEjecucion || [];
+      s.cuotas = s.cuotas || [];
+      return s;
+    }
+  } catch (e) {}
+  return { usuarios: [], promos: [], sesion: null, acuerdos: [], calendarioEjecucion: [], cuotas: [] };
+}
+function saveStore() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); } catch (e) {}
+}
+let STATE = loadStore();
+
+/* ==========================================================================
+   CÁLCULOS — idénticos a calculations.py
+   ========================================================================== */
+function safeDiv(a, b) { return (!b) ? 0 : a / b; }
+
+function calcularPromocion(p) {
+  const r = {};
+  r.margen_regular = p.precio_regular - p.costo_unitario_neto;
+  r.margen_regular_pct = safeDiv(r.margen_regular, p.precio_regular);
+
+  r.descuento_promo = p.precio_regular - p.precio_promocional;
+  r.descuento_promo_pct = safeDiv(r.descuento_promo, p.precio_regular);
+
+  r.incremental_esperado = p.unidades_esperadas_promo - p.unidades_baseline;
+  r.funding_proveedor_total = p.funding_proveedor_ud * p.unidades_esperadas_promo;
+
+  r.aporte_kielsa_ud = Math.max(0, r.descuento_promo - p.funding_proveedor_ud);
+  r.aporte_kielsa_total = r.aporte_kielsa_ud * p.unidades_esperadas_promo;
+
+  r.margen_post_funding_ud = p.precio_promocional - p.costo_unitario_neto + p.funding_proveedor_ud;
+  r.margen_post_funding_pct = safeDiv(r.margen_post_funding_ud, p.precio_promocional);
+
+  const tiendaFaltante = p.canal_tiendas === "Tiendas seleccionadas" && (!p.numero_tienda || p.numero_tienda === "No aplica");
+  const margenNegativo = r.margen_post_funding_ud < 0;
+  const fundingSinAprobacion = p.funding_proveedor_ud > 0 && p.aprobacion_escrita !== "Sí";
+  const bajoGuardrail = r.margen_post_funding_pct < p.guardrail_margen_minimo_pct;
+
+  if (!p.promo_id) { r.estatus_governance = ""; r.motivo_alerta = ""; }
+  else if (tiendaFaltante) { r.estatus_governance = "BLOQUEADA"; r.motivo_alerta = "Falta número de tienda"; }
+  else if (margenNegativo) { r.estatus_governance = "BLOQUEADA"; r.motivo_alerta = "Margen post-funding negativo"; }
+  else if (fundingSinAprobacion) { r.estatus_governance = "BLOQUEADA"; r.motivo_alerta = "Funding sin aprobación escrita"; }
+  else if (bajoGuardrail) { r.estatus_governance = "REQUIERE APROBACIÓN"; r.motivo_alerta = "Margen debajo del guardrail"; }
+  else { r.estatus_governance = "APROBADA"; r.motivo_alerta = "OK"; }
+
+  return r;
+}
+function instruccionCarga(estatus) { return estatus === "APROBADA" ? "CARGAR" : ""; }
+
+/* ==========================================================================
+   CÁLCULOS — ACUERDOS COMERCIALES (idénticos a acuerdos.py)
+   ========================================================================== */
+function parseISO(d) { const [y,m,day] = d.split("-").map(Number); return new Date(y, m-1, day); }
+function toISO(d) { return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+function hoyDate() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+
+function calcularDuracionMeses(fechaInicio, fechaFin) {
+  if (!fechaInicio || !fechaFin) return 0;
+  const fi = parseISO(fechaInicio), ff = parseISO(fechaFin);
+  const meses = (ff.getFullYear() - fi.getFullYear()) * 12 + (ff.getMonth() - fi.getMonth()) + 1;
+  return Math.max(1, meses);
+}
+function calcularNCobrosEsperados(duracionMeses, frecuencia) {
+  if (!duracionMeses || !frecuencia) return 0;
+  if (frecuencia === "Único") return 1;
+  const step = FREQ_MESES[frecuencia];
+  if (!step) return 0;
+  return Math.ceil(duracionMeses / step);
+}
+function calcularAcuerdo(a) {
+  const r = {};
+  r.duracion_meses = calcularDuracionMeses(a.fecha_inicio, a.fecha_fin);
+  r.n_cobros_esperados = calcularNCobrosEsperados(r.duracion_meses, a.frecuencia_cobro);
+
+  const obligatorios = [a.pais, a.responsable_comercial, a.proveedor, a.tipo_acuerdo, a.descripcion,
+    a.tipo_valor, a.moneda, a.fecha_inicio, a.fecha_fin, a.frecuencia_cobro, a.area_confirma];
+  const faltanDatos = obligatorios.some(v => !v);
+  const montoFijoInvalido = a.tipo_valor === "Monto fijo" && (!a.monto_total_negociacion || a.monto_total_negociacion <= 0);
+  const montoVariableInvalido = a.tipo_valor === "Monto variable" && (!a.base_variable || !a.pct_acordado || a.pct_acordado <= 0);
+  const faltaDetalleOtro = a.base_variable === "Otro" && !a.detalle_base;
+
+  if (!a.agreement_id) { r.estatus = ""; r.motivo_alerta = ""; }
+  else if (a.aprobacion_escrita !== "Sí") { r.estatus = "BLOQUEADO"; r.motivo_alerta = "Falta aprobación escrita del proveedor"; }
+  else if (faltanDatos) { r.estatus = "BLOQUEADO"; r.motivo_alerta = "Faltan datos obligatorios"; }
+  else if (montoFijoInvalido) { r.estatus = "BLOQUEADO"; r.motivo_alerta = "Monto total requerido para monto fijo"; }
+  else if (montoVariableInvalido) { r.estatus = "BLOQUEADO"; r.motivo_alerta = "Falta Base variable o % acordado"; }
+  else if (faltaDetalleOtro) { r.estatus = "BLOQUEADO"; r.motivo_alerta = "Describa la base variable"; }
+  else { r.estatus = "APROBADO"; r.motivo_alerta = "OK"; }
+  return r;
+}
+function siguienteAgreementId() {
+  let max = 0;
+  STATE.acuerdos.forEach(a => { const m = /^AGR-(\d+)$/.exec(a.agreement_id); if (m) max = Math.max(max, parseInt(m[1],10)); });
+  return "AGR-" + String(max + 1).padStart(4, "0");
+}
+function eomonth(base, mesesASumar) {
+  const total = base.getMonth() + mesesASumar;
+  const y = base.getFullYear() + Math.floor(total / 12);
+  const m = ((total % 12) + 12) % 12;
+  return new Date(y, m + 1, 0); // día 0 del mes siguiente = último día de m
+}
+function generarCuotas(agreementId, a, calc) {
+  if (calc.estatus !== "APROBADO" || calc.n_cobros_esperados < 1) return [];
+  const fi = parseISO(a.fecha_inicio), ff = parseISO(a.fecha_fin);
+  const step = FREQ_MESES[a.frecuencia_cobro];
+  let montoFijoCuota = null;
+  if (a.tipo_valor === "Monto fijo" && a.monto_total_negociacion && calc.n_cobros_esperados) {
+    montoFijoCuota = Math.round((a.monto_total_negociacion / calc.n_cobros_esperados) * 100) / 100;
+  }
+  const cuotas = [];
+  for (let k = 1; k <= calc.n_cobros_esperados; k++) {
+    const fechaEsperada = (a.frecuencia_cobro === "Único" || !step) ? ff : eomonth(fi, k * step - 1);
+    cuotas.push({
+      agreement_id: agreementId, cuota_numero: k, fecha_esperada_cobro: toISO(fechaEsperada),
+      tipo_valor: a.tipo_valor, base_variable: a.tipo_valor === "Monto variable" ? a.base_variable : "No aplica",
+      pct_acordado: a.tipo_valor === "Monto variable" ? a.pct_acordado : 0, moneda: a.moneda,
+      monto_fijo_cuota: montoFijoCuota, base_real_periodo: null, monto_cobrado_cuota: 0,
+      fecha_cobro: null, documento_referencia: "",
+    });
+  }
+  return cuotas;
+}
+function calcularMontoEsperado(tipoValor, montoFijoCuota, baseRealPeriodo, pctAcordado) {
+  if (tipoValor === "Monto fijo") return montoFijoCuota;
+  if (baseRealPeriodo === null || baseRealPeriodo === undefined) return null;
+  return Math.round(baseRealPeriodo * (pctAcordado || 0) * 100) / 100;
+}
+function calcularEjecucionConfirmada(areaConfirma, condicionConfirmada, ejecutadoMkt, ejecutadoOps) {
+  if (areaConfirma === "No aplica") return "Sí";
+  if (areaConfirma === "Comercial") return condicionConfirmada === "Sí" ? "Sí" : "No";
+  if (areaConfirma === "Marketing") return ejecutadoMkt === "Sí" ? "Sí" : "No";
+  if (areaConfirma === "Operaciones") return ejecutadoOps === "Sí" ? "Sí" : "No";
+  return "No";
+}
+function calcularDevengado(ejecucionConfirmada, fechaEsperadaCobro, montoEsperado) {
+  if (montoEsperado === null || montoEsperado === undefined) return "No";
+  return (ejecucionConfirmada === "Sí" && hoyDate() >= parseISO(fechaEsperadaCobro)) ? "Sí" : "No";
+}
+function calcularPendienteCuota(devengado, montoEsperado, montoCobrado) {
+  if (devengado !== "Sí" || montoEsperado === null || montoEsperado === undefined) return 0;
+  return Math.max(0, montoEsperado - (montoCobrado || 0));
+}
+function calcularEstatusCuota(tipoValor, baseRealPeriodo, devengado, montoCobrado, montoEsperado, fechaEsperadaCobro) {
+  if (tipoValor === "Monto variable" && (baseRealPeriodo === null || baseRealPeriodo === undefined)) return "PENDIENTE BASE REAL";
+  if (devengado !== "Sí") return "FUTURO / NO DEVENGADO";
+  if (montoEsperado !== null && montoEsperado !== undefined && (montoCobrado || 0) >= montoEsperado) return "COBRADO";
+  if (hoyDate() > parseISO(fechaEsperadaCobro)) return "VENCIDO";
+  return "DEVENGADO - PENDIENTE";
+}
+function calcularDiasVencido(estatusCuota, fechaEsperadaCobro) {
+  if (estatusCuota !== "VENCIDO") return 0;
+  return Math.round((hoyDate() - parseISO(fechaEsperadaCobro)) / 86400000);
+}
+function calcularEstatusCalendarioEjecucion(agreementId, ejecutado, fechaEsperada) {
+  if (!agreementId) return "";
+  if (ejecutado === "Sí") return "EJECUTADO";
+  if (hoyDate() > parseISO(fechaEsperada)) return "VENCIDO / NO EJECUTADO";
+  return "PENDIENTE";
+}
+function enriquecerCuota(c) {
+  const acuerdo = STATE.acuerdos.find(a => a.agreement_id === c.agreement_id) || {};
+  let ejecutadoMkt = null, ejecutadoOps = null;
+  if (acuerdo.area_confirma === "Marketing") {
+    const e = STATE.calendarioEjecucion.find(x => x.agreement_id === c.agreement_id && x.area === "Marketing");
+    ejecutadoMkt = e ? e.ejecutado : "No";
+  } else if (acuerdo.area_confirma === "Operaciones") {
+    const e = STATE.calendarioEjecucion.find(x => x.agreement_id === c.agreement_id && x.area === "Operaciones");
+    ejecutadoOps = e ? e.ejecutado : "No";
+  }
+  const ejecucion = calcularEjecucionConfirmada(acuerdo.area_confirma, acuerdo.condicion_confirmada, ejecutadoMkt, ejecutadoOps);
+  const montoEsperado = calcularMontoEsperado(c.tipo_valor, c.monto_fijo_cuota, c.base_real_periodo, c.pct_acordado);
+  const devengado = calcularDevengado(ejecucion, c.fecha_esperada_cobro, montoEsperado);
+  const pendiente = calcularPendienteCuota(devengado, montoEsperado, c.monto_cobrado_cuota || 0);
+  const estatusCuota = calcularEstatusCuota(c.tipo_valor, c.base_real_periodo, devengado, c.monto_cobrado_cuota || 0, montoEsperado, c.fecha_esperada_cobro);
+  const diasVencido = calcularDiasVencido(estatusCuota, c.fecha_esperada_cobro);
+  return { ...c, proveedor: acuerdo.proveedor, tipo_acuerdo: acuerdo.tipo_acuerdo, ejecucion_confirmada: ejecucion,
+    monto_esperado: montoEsperado, devengado, pendiente_cuota: pendiente, estatus_cuota: estatusCuota, dias_vencido: diasVencido };
+}
+
+/* ==========================================================================
+   UTILIDADES
+   ========================================================================== */
+function fmtMoney(n) { return (n || 0).toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtPct(n) { return ((n || 0) * 100).toLocaleString("es-HN", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "%"; }
+function fmtUds(n) { return Math.round(n || 0).toLocaleString("es-HN"); }
+function escapeHtml(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+function todayISO() { return new Date().toISOString().slice(0,10); }
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+function pillClass(estatus) {
+  if (estatus === "APROBADA") return "pill-success";
+  if (estatus === "REQUIERE APROBACIÓN") return "pill-warning";
+  if (estatus === "BLOQUEADA") return "pill-danger";
+  return "";
+}
+function rowClass(estatus) {
+  if (estatus === "APROBADA") return "row-success";
+  if (estatus === "REQUIERE APROBACIÓN") return "row-warning";
+  if (estatus === "BLOQUEADA") return "row-danger";
+  return "";
+}
+function pillClassAcuerdo(estatus) {
+  if (estatus === "APROBADO") return "pill-success";
+  if (estatus === "BLOQUEADO") return "pill-danger";
+  return "";
+}
+function pillClassCuota(estatus) {
+  if (estatus === "COBRADO") return "pill-success";
+  if (estatus === "DEVENGADO - PENDIENTE") return "pill-warning";
+  if (estatus === "VENCIDO") return "pill-danger";
+  return "";
+}
+function pillClassEjec(estatus) {
+  if (estatus === "EJECUTADO") return "pill-success";
+  if (estatus === "PENDIENTE") return "pill-warning";
+  if (estatus === "VENCIDO / NO EJECUTADO") return "pill-danger";
+  return "";
+}
+function siguientePromoId() {
+  let max = 0;
+  STATE.promos.forEach(p => {
+    const m = /^PR-(\d+)$/.exec(p.promo_id);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return "PR-" + String(max + 1).padStart(4, "0");
+}
+function initials(name) {
+  return (name || "?").trim().split(/\s+/).slice(0,2).map(s => s[0]?.toUpperCase() || "").join("") || "?";
+}
+
+/* ==========================================================================
+   AUTENTICACIÓN (demo — sin cifrado real, solo para esta vista previa)
+   ========================================================================== */
+function switchTab(which) {
+  document.getElementById("tab-login").classList.toggle("active", which === "login");
+  document.getElementById("tab-signup").classList.toggle("active", which === "signup");
+  document.getElementById("form-login").style.display = which === "login" ? "flex" : "none";
+  document.getElementById("form-signup").style.display = which === "signup" ? "flex" : "none";
+}
+
+function handleLogin(ev) {
+  ev.preventDefault();
+  const username = document.getElementById("login-username").value.trim().toLowerCase();
+  if (!username) { showToast("Escribe un usuario."); return false; }
+  let user = STATE.usuarios.find(u => u.username === username);
+  if (!user) {
+    // En esta demo, si el usuario no existe se crea al vuelo como comercial.
+    user = { username, nombre_completo: username, rol: "comercial" };
+    STATE.usuarios.push(user);
+  }
+  STATE.sesion = username;
+  saveStore();
+  boot();
+  return false;
+}
+
+function handleSignup(ev) {
+  ev.preventDefault();
+  const nombre = document.getElementById("signup-name").value.trim();
+  const username = document.getElementById("signup-username").value.trim().toLowerCase();
+  const rol = document.getElementById("signup-role").value;
+  if (!nombre || !username) { showToast("Completa nombre y usuario."); return false; }
+  if (STATE.usuarios.find(u => u.username === username)) { showToast("Ese usuario ya existe, inicia sesión."); return false; }
+  STATE.usuarios.push({ username, nombre_completo: nombre, rol });
+  STATE.sesion = username;
+  saveStore();
+  boot();
+  return false;
+}
+
+function logout() {
+  STATE.sesion = null;
+  saveStore();
+  location.reload();
+}
+
+function currentUser() {
+  return STATE.usuarios.find(u => u.username === STATE.sesion) || null;
+}
+
+/* ==========================================================================
+   NAVEGACIÓN
+   ========================================================================== */
+const ALL_PAGES = ["registrar","panel","carga","ac-registrar","ac-panel","ac-mkt","ac-ops","ac-cobros","ac-resumen"];
+
+function goPage(page) {
+  ALL_PAGES.forEach(p => {
+    document.getElementById("page-" + p).style.display = p === page ? "block" : "none";
+  });
+  document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.page === page));
+  if (page === "panel") renderPanel();
+  if (page === "carga") renderCarga();
+  if (page === "ac-registrar") resetFormAcuerdo();
+  if (page === "ac-panel") renderPanelAcuerdos();
+  if (page === "ac-mkt") renderCalendarioEjecucion("Marketing");
+  if (page === "ac-ops") renderCalendarioEjecucion("Operaciones");
+  if (page === "ac-cobros") renderCalendarioCobros();
+  if (page === "ac-resumen") renderResumenCCO();
+}
+
+/* ==========================================================================
+   FORMULARIO — REGISTRAR
+   ========================================================================== */
+function fillSelect(id, options) {
+  const el = document.getElementById(id);
+  el.innerHTML = options.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join("");
+}
+
+function toggleTiendaField() {
+  const canal = document.getElementById("f-canal").value;
+  document.getElementById("field-tienda").classList.toggle("disabled", canal !== "Tiendas seleccionadas");
+}
+
+function resetForm() {
+  document.getElementById("form-promo").reset();
+  document.getElementById("f-promo-id").value = siguientePromoId();
+  document.getElementById("f-fecha-solicitud").value = todayISO();
+  document.getElementById("f-fecha-inicio").value = todayISO();
+  document.getElementById("f-fecha-fin").value = todayISO();
+  document.getElementById("f-comercial").value = currentUser()?.nombre_completo || "";
+  document.getElementById("f-guardrail").value = "0.10";
+  document.getElementById("f-aprobacion-escrita").value = "Sí";
+  toggleTiendaField();
+  document.getElementById("registrar-result").innerHTML = "";
+  document.getElementById("registrar-errors").innerHTML = "";
+  livePreview();
+}
+
+function readFormInput() {
+  return {
+    promo_id: document.getElementById("f-promo-id").value.trim(),
+    pais: document.getElementById("f-pais").value,
+    comercial: document.getElementById("f-comercial").value.trim(),
+    fecha_solicitud: document.getElementById("f-fecha-solicitud").value,
+    objetivo_primario: document.getElementById("f-objetivo").value,
+    mecanica: document.getElementById("f-mecanica").value,
+    proveedor: document.getElementById("f-proveedor").value.trim(),
+    marca: document.getElementById("f-marca").value.trim(),
+    sku: document.getElementById("f-sku").value.trim(),
+    descripcion: document.getElementById("f-descripcion").value.trim(),
+    categoria: document.getElementById("f-categoria").value.trim(),
+    canal_tiendas: document.getElementById("f-canal").value,
+    numero_tienda: document.getElementById("f-tienda").value.trim(),
+    fecha_inicio: document.getElementById("f-fecha-inicio").value,
+    fecha_fin: document.getElementById("f-fecha-fin").value,
+    precio_regular: parseFloat(document.getElementById("f-precio-regular").value) || 0,
+    costo_unitario_neto: parseFloat(document.getElementById("f-costo").value) || 0,
+    precio_promocional: parseFloat(document.getElementById("f-precio-promo").value) || 0,
+    unidades_baseline: parseFloat(document.getElementById("f-uds-base").value) || 0,
+    unidades_esperadas_promo: parseFloat(document.getElementById("f-uds-promo").value) || 0,
+    funding_proveedor_ud: parseFloat(document.getElementById("f-funding").value) || 0,
+    aprobacion_escrita: document.getElementById("f-aprobacion-escrita").value,
+    guardrail_margen_minimo_pct: parseFloat(document.getElementById("f-guardrail").value) || 0,
+    aprobador: document.getElementById("f-aprobador").value.trim(),
+    observaciones: document.getElementById("f-observaciones").value.trim(),
+  };
+}
+
+function livePreview() {
+  const p = readFormInput();
+  const canalOk = p.canal_tiendas === "Tiendas seleccionadas" ? (p.numero_tienda || "No aplica") : "No aplica";
+  const calc = calcularPromocion({ ...p, numero_tienda: canalOk, promo_id: p.promo_id || "tmp" });
+  const box = document.getElementById("live-metrics");
+  box.innerHTML = `
+    <div class="metric-tile"><div class="m-label">Margen regular %</div><div class="m-value tabular">${fmtPct(calc.margen_regular_pct)}</div></div>
+    <div class="metric-tile"><div class="m-label">Descuento promo %</div><div class="m-value tabular">${fmtPct(calc.descuento_promo_pct)}</div></div>
+    <div class="metric-tile"><div class="m-label">Funding total</div><div class="m-value tabular">${fmtMoney(calc.funding_proveedor_total)}</div></div>
+    <div class="metric-tile accent-${calc.estatus_governance === "APROBADA" ? "success" : calc.estatus_governance === "REQUIERE APROBACIÓN" ? "warning" : calc.estatus_governance === "BLOQUEADA" ? "danger" : ""}">
+      <div class="m-label">Margen post-funding %</div><div class="m-value tabular">${fmtPct(calc.margen_post_funding_pct)}</div>
+    </div>
+    <div class="metric-tile"><div class="m-label">Estatus</div><div class="m-value" style="font-size:14px;">${calc.estatus_governance ? `<span class="pill ${pillClass(calc.estatus_governance)}">${calc.estatus_governance}</span>` : "<span class='cell-muted'>—</span>"}</div></div>
+  `;
+}
+
+function handleGuardarPromo(ev) {
+  ev.preventDefault();
+  const p = readFormInput();
+  const errores = [];
+
+  if (!p.promo_id) errores.push("Promo ID es obligatorio.");
+  const existe = STATE.promos.find(x => x.promo_id === p.promo_id);
+  const editando = document.getElementById("form-promo").dataset.editing === p.promo_id;
+  if (existe && !editando) errores.push(`El Promo ID '${p.promo_id}' ya existe. Usa uno distinto.`);
+  if (p.fecha_fin < p.fecha_inicio) errores.push("La fecha fin debe ser posterior o igual a la fecha inicio.");
+  if (p.canal_tiendas === "Tiendas seleccionadas" && !p.numero_tienda) errores.push("Debes indicar el Número de tienda cuando el canal es 'Tiendas seleccionadas'.");
+  [["Comercial", p.comercial], ["Proveedor", p.proveedor], ["SKU", p.sku], ["Descripción", p.descripcion], ["Categoría", p.categoria]].forEach(([label, val]) => {
+    if (!val) errores.push(`El campo '${label}' es obligatorio.`);
+  });
+
+  const errBox = document.getElementById("registrar-errors");
+  if (errores.length) {
+    errBox.innerHTML = `<div class="error-box"><strong>Revisa lo siguiente:</strong><ul>${errores.map(e => `<li>${escapeHtml(e)}</li>`).join("")}</ul></div>`;
+    document.getElementById("registrar-result").innerHTML = "";
+    return false;
+  }
+  errBox.innerHTML = "";
+
+  p.numero_tienda = p.canal_tiendas === "Tiendas seleccionadas" ? p.numero_tienda : "No aplica";
+  const calc = calcularPromocion(p);
+  const record = {
+    ...p,
+    ...calc,
+    instruccion: instruccionCarga(calc.estatus_governance),
+    cargado: existe ? existe.cargado : "No",
+    fecha_carga: existe ? existe.fecha_carga : null,
+    cargado_por: existe ? existe.cargado_por : null,
+    incidencia_observacion: existe ? existe.incidencia_observacion : "",
+    creado_en: existe ? existe.creado_en : new Date().toISOString(),
+  };
+
+  STATE.promos = STATE.promos.filter(x => x.promo_id !== p.promo_id);
+  STATE.promos.unshift(record);
+  saveStore();
+
+  const bannerClass = calc.estatus_governance === "APROBADA" ? "success" : calc.estatus_governance === "REQUIERE APROBACIÓN" ? "warning" : "danger";
+  document.getElementById("registrar-result").innerHTML = `
+    <div class="result-banner ${bannerClass}">
+      <span class="pill ${pillClass(calc.estatus_governance)}">${calc.estatus_governance}</span>
+      <div>
+        <div class="rb-title">Promoción ${escapeHtml(p.promo_id)} guardada</div>
+        <div class="rb-sub">${escapeHtml(calc.motivo_alerta)} · Margen post-funding ${fmtPct(calc.margen_post_funding_pct)} · Funding total ${fmtMoney(calc.funding_proveedor_total)}</div>
+      </div>
+    </div>`;
+  showToast(`${p.promo_id} guardada — ${calc.estatus_governance}`);
+  document.getElementById("form-promo").dataset.editing = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setTimeout(() => resetForm(), 10);
+  return false;
+}
+
+function editarPromo(promoId) {
+  const p = STATE.promos.find(x => x.promo_id === promoId);
+  if (!p) return;
+  goPage("registrar");
+  document.getElementById("f-promo-id").value = p.promo_id;
+  document.getElementById("f-pais").value = p.pais;
+  document.getElementById("f-comercial").value = p.comercial;
+  document.getElementById("f-fecha-solicitud").value = p.fecha_solicitud;
+  document.getElementById("f-objetivo").value = p.objetivo_primario;
+  document.getElementById("f-mecanica").value = p.mecanica;
+  document.getElementById("f-proveedor").value = p.proveedor;
+  document.getElementById("f-marca").value = p.marca;
+  document.getElementById("f-sku").value = p.sku;
+  document.getElementById("f-descripcion").value = p.descripcion;
+  document.getElementById("f-categoria").value = p.categoria;
+  document.getElementById("f-canal").value = p.canal_tiendas;
+  document.getElementById("f-tienda").value = p.numero_tienda === "No aplica" ? "" : p.numero_tienda;
+  document.getElementById("f-fecha-inicio").value = p.fecha_inicio;
+  document.getElementById("f-fecha-fin").value = p.fecha_fin;
+  document.getElementById("f-precio-regular").value = p.precio_regular;
+  document.getElementById("f-costo").value = p.costo_unitario_neto;
+  document.getElementById("f-precio-promo").value = p.precio_promocional;
+  document.getElementById("f-uds-base").value = p.unidades_baseline;
+  document.getElementById("f-uds-promo").value = p.unidades_esperadas_promo;
+  document.getElementById("f-funding").value = p.funding_proveedor_ud;
+  document.getElementById("f-aprobacion-escrita").value = p.aprobacion_escrita;
+  document.getElementById("f-guardrail").value = p.guardrail_margen_minimo_pct;
+  document.getElementById("f-aprobador").value = p.aprobador || "";
+  document.getElementById("f-observaciones").value = p.observaciones || "";
+  document.getElementById("form-promo").dataset.editing = p.promo_id;
+  toggleTiendaField();
+  livePreview();
+  showToast(`Editando ${promoId}`);
+}
+
+function eliminarPromo(promoId) {
+  STATE.promos = STATE.promos.filter(x => x.promo_id !== promoId);
+  saveStore();
+  renderPanel();
+  showToast(`${promoId} eliminada`);
+}
+
+/* ==========================================================================
+   PANEL
+   ========================================================================== */
+function renderPanel() {
+  const box = document.getElementById("panel-content");
+  if (!STATE.promos.length) {
+    box.innerHTML = `<div class="card"><div class="empty-state"><strong>Aún no hay promociones</strong>Ve a "Registrar promoción" para capturar la primera.</div></div>`;
+    return;
+  }
+
+  const totales = { total: STATE.promos.length,
+    APROBADA: STATE.promos.filter(p => p.estatus_governance === "APROBADA").length,
+    "REQUIERE APROBACIÓN": STATE.promos.filter(p => p.estatus_governance === "REQUIERE APROBACIÓN").length,
+    BLOQUEADA: STATE.promos.filter(p => p.estatus_governance === "BLOQUEADA").length };
+
+  const rows = STATE.promos.map(p => `
+    <tr class="${rowClass(p.estatus_governance)}">
+      <td class="mono">${escapeHtml(p.promo_id)}</td>
+      <td>${escapeHtml(p.pais)}</td>
+      <td>${escapeHtml(p.proveedor)}</td>
+      <td class="mono">${escapeHtml(p.sku)}</td>
+      <td>${escapeHtml(p.descripcion)}</td>
+      <td>${escapeHtml(p.mecanica)}</td>
+      <td class="tabular">${fmtMoney(p.precio_regular)}</td>
+      <td class="tabular">${fmtMoney(p.precio_promocional)}</td>
+      <td class="tabular">${fmtPct(p.margen_post_funding_pct)}</td>
+      <td><span class="pill ${pillClass(p.estatus_governance)}">${p.estatus_governance}</span></td>
+      <td class="cell-muted">${escapeHtml(p.motivo_alerta)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editarPromo('${p.promo_id}')">Editar</button>
+        <button class="btn btn-danger-ghost btn-sm" onclick="eliminarPromo('${p.promo_id}')">Eliminar</button>
+      </td>
+    </tr>`).join("");
+
+  box.innerHTML = `
+    <div class="metrics-strip">
+      <div class="metric-tile"><div class="m-label">Total promociones</div><div class="m-value tabular">${totales.total}</div></div>
+      <div class="metric-tile accent-success"><div class="m-label">Aprobadas</div><div class="m-value tabular">${totales.APROBADA}</div></div>
+      <div class="metric-tile accent-warning"><div class="m-label">Requieren aprobación</div><div class="m-value tabular">${totales["REQUIERE APROBACIÓN"]}</div></div>
+      <div class="metric-tile accent-danger"><div class="m-label">Bloqueadas</div><div class="m-value tabular">${totales.BLOQUEADA}</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Promo ID</th><th>País</th><th>Proveedor</th><th>SKU</th><th>Descripción</th><th>Mecánica</th>
+          <th>Precio reg.</th><th>Precio promo</th><th>Margen p/f %</th><th>Estatus</th><th>Motivo</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ==========================================================================
+   CARGA — DATA MAESTRA
+   ========================================================================== */
+function renderCarga() {
+  const box = document.getElementById("carga-content");
+  const aprobadas = STATE.promos.filter(p => p.estatus_governance === "APROBADA");
+  if (!aprobadas.length) {
+    box.innerHTML = `<div class="card"><div class="empty-state"><strong>No hay promociones aprobadas todavía</strong>En cuanto una promoción quede APROBADA, aparecerá lista para cargar aquí.</div></div>`;
+    return;
+  }
+  const pendientes = aprobadas.filter(p => p.cargado !== "Sí");
+  const cargadas = aprobadas.filter(p => p.cargado === "Sí");
+
+  const rowsPend = pendientes.map(p => `
+    <tr>
+      <td class="mono">${escapeHtml(p.promo_id)}</td>
+      <td>${escapeHtml(p.pais)}</td>
+      <td class="mono">${escapeHtml(p.sku)}</td>
+      <td>${escapeHtml(p.descripcion)}</td>
+      <td>${escapeHtml(p.mecanica)}</td>
+      <td class="tabular">${fmtMoney(p.precio_regular)}</td>
+      <td class="tabular">${fmtMoney(p.precio_promocional)}</td>
+      <td class="tabular">${fmtPct(p.descuento_promo_pct)}</td>
+      <td>${escapeHtml(p.fecha_inicio)} → ${escapeHtml(p.fecha_fin)}</td>
+      <td>${escapeHtml(p.canal_tiendas)}</td>
+      <td class="mono">${escapeHtml(p.numero_tienda)}</td>
+      <td><span class="pill pill-success">${escapeHtml(p.instruccion)}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="marcarCargada('${p.promo_id}')">Marcar cargada</button></td>
+    </tr>`).join("");
+
+  const rowsCargadas = cargadas.map(p => `
+    <tr>
+      <td class="mono">${escapeHtml(p.promo_id)}</td>
+      <td class="mono">${escapeHtml(p.sku)}</td>
+      <td>${escapeHtml(p.descripcion)}</td>
+      <td class="cell-muted">${escapeHtml(p.fecha_carga || "")}</td>
+      <td>${escapeHtml(p.cargado_por || "")}</td>
+      <td class="cell-muted">${escapeHtml(p.incidencia_observacion || "—")}</td>
+    </tr>`).join("");
+
+  box.innerHTML = `
+    <div class="section-title" style="margin-top:0;">Pendientes de cargar (${pendientes.length})</div>
+    ${pendientes.length ? `
+      <div class="table-wrap" style="margin-bottom:16px;">
+        <table>
+          <thead><tr>
+            <th>Promo ID</th><th>País</th><th>SKU</th><th>Descripción</th><th>Mecánica</th><th>Precio reg.</th>
+            <th>Precio promo</th><th>% Desc.</th><th>Vigencia</th><th>Canal</th><th>Tienda</th><th>Instrucción</th><th></th>
+          </tr></thead>
+          <tbody>${rowsPend}</tbody>
+        </table>
+      </div>
+      <button class="btn btn-primary" onclick="exportarExcel()">⬇ Descargar Excel (formato Data Maestra)</button>
+    ` : `<div class="card"><div class="empty-state">Todo lo aprobado ya fue cargado.</div></div>`}
+
+    <div class="section-title">Ya cargadas (${cargadas.length})</div>
+    ${cargadas.length ? `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Promo ID</th><th>SKU</th><th>Descripción</th><th>Fecha carga</th><th>Cargado por</th><th>Incidencia</th></tr></thead>
+          <tbody>${rowsCargadas}</tbody>
+        </table>
+      </div>` : `<p class="cell-muted" style="font-size:13px;">Ninguna todavía.</p>`}
+  `;
+}
+
+function marcarCargada(promoId) {
+  const p = STATE.promos.find(x => x.promo_id === promoId);
+  if (!p) return;
+  p.cargado = "Sí";
+  p.fecha_carga = new Date().toISOString().slice(0,16).replace("T"," ");
+  p.cargado_por = currentUser()?.nombre_completo || "—";
+  p.incidencia_observacion = "";
+  saveStore();
+  renderCarga();
+  showToast(`${promoId} marcada como cargada`);
+}
+
+function exportarExcel() {
+  const aprobadas = STATE.promos.filter(p => p.estatus_governance === "APROBADA" && p.cargado !== "Sí");
+  const data = aprobadas.map(p => ({
+    "Promo ID": p.promo_id, "País": p.pais, "SKU": p.sku, "Descripción": p.descripcion,
+    "Mecánica": p.mecanica, "Precio regular": p.precio_regular, "Precio promo": p.precio_promocional,
+    "% Descuento": p.descuento_promo_pct, "Fecha inicio": p.fecha_inicio, "Fecha fin": p.fecha_fin,
+    "Canal / Tiendas": p.canal_tiendas, "Estatus Governance": p.estatus_governance,
+    "Instrucción": p.instruccion, "Número de tienda": p.numero_tienda,
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "CARGA_DATA_MAESTRA");
+  const stamp = new Date().toISOString().slice(0,16).replace(/[-:T]/g,"");
+  XLSX.writeFile(wb, `carga_data_maestra_${stamp}.xlsx`);
+  showToast("Excel descargado");
+}
+
+/* ==========================================================================
+   ACUERDOS COMERCIALES — FORMULARIO
+   ========================================================================== */
+function fillSelectAcuerdos() {
+  fillSelect("a-pais", CAT.PAISES);
+  fillSelect("a-tipo-acuerdo", CAT.TIPOS_ACUERDO);
+  fillSelect("a-tipo-valor", CAT.TIPOS_VALOR);
+  fillSelect("a-base-variable", CAT.BASES_VARIABLES);
+  fillSelect("a-moneda", CAT.MONEDAS);
+  fillSelect("a-frecuencia", CAT.FRECUENCIAS);
+  fillSelect("a-area-confirma", CAT.AREAS_CONFIRMAN);
+}
+function toggleTipoValor() {
+  const esVariable = document.getElementById("a-tipo-valor").value === "Monto variable";
+  document.getElementById("a-field-monto-fijo").style.display = esVariable ? "none" : "flex";
+  document.getElementById("a-field-base-variable").style.display = esVariable ? "flex" : "none";
+  document.getElementById("a-field-pct").style.display = esVariable ? "flex" : "none";
+  if (!esVariable) document.getElementById("a-field-detalle-base").style.display = "none";
+  else toggleBaseOtro();
+}
+function toggleBaseOtro() {
+  const esOtro = document.getElementById("a-base-variable").value === "Otro";
+  document.getElementById("a-field-detalle-base").style.display = esOtro ? "flex" : "none";
+}
+function toggleCondicionComercial() {
+  const esComercial = document.getElementById("a-area-confirma").value === "Comercial";
+  document.getElementById("a-field-condicion").style.display = esComercial ? "flex" : "none";
+}
+function resetFormAcuerdo() {
+  const form = document.getElementById("form-acuerdo");
+  if (!form) return;
+  form.reset();
+  document.getElementById("a-id").value = siguienteAgreementId();
+  document.getElementById("a-responsable").value = currentUser()?.nombre_completo || "";
+  document.getElementById("a-fecha-inicio").value = todayISO();
+  document.getElementById("a-fecha-fin").value = todayISO();
+  document.getElementById("a-aprobacion").value = "Sí";
+  toggleTipoValor();
+  toggleCondicionComercial();
+  document.getElementById("ac-registrar-result").innerHTML = "";
+  document.getElementById("ac-registrar-errors").innerHTML = "";
+  form.dataset.editing = "";
+}
+function readFormAcuerdo() {
+  const tipoValor = document.getElementById("a-tipo-valor").value;
+  return {
+    agreement_id: document.getElementById("a-id").value.trim(),
+    pais: document.getElementById("a-pais").value,
+    responsable_comercial: document.getElementById("a-responsable").value.trim(),
+    proveedor: document.getElementById("a-proveedor").value.trim(),
+    tipo_acuerdo: document.getElementById("a-tipo-acuerdo").value,
+    descripcion: document.getElementById("a-descripcion").value.trim(),
+    tipo_valor: tipoValor,
+    base_variable: tipoValor === "Monto variable" ? document.getElementById("a-base-variable").value : null,
+    detalle_base: document.getElementById("a-detalle-base").value.trim() || null,
+    pct_acordado: tipoValor === "Monto variable" ? (parseFloat(document.getElementById("a-pct").value) || 0) : null,
+    monto_total_negociacion: tipoValor === "Monto fijo" ? (parseFloat(document.getElementById("a-monto-total").value) || 0) : null,
+    moneda: document.getElementById("a-moneda").value,
+    fecha_inicio: document.getElementById("a-fecha-inicio").value,
+    fecha_fin: document.getElementById("a-fecha-fin").value,
+    frecuencia_cobro: document.getElementById("a-frecuencia").value,
+    area_confirma: document.getElementById("a-area-confirma").value,
+    condicion_confirmada: document.getElementById("a-area-confirma").value === "Comercial" ? document.getElementById("a-condicion").value : "",
+    aprobacion_escrita: document.getElementById("a-aprobacion").value,
+    referencia_aprobacion: document.getElementById("a-referencia").value.trim(),
+    id_relacionado: document.getElementById("a-relacionado").value.trim(),
+    meta_umbral: document.getElementById("a-meta").value.trim(),
+    observaciones: document.getElementById("a-observaciones").value.trim(),
+  };
+}
+function guardarAcuerdoCompleto(a) {
+  const calc = calcularAcuerdo(a);
+  const existente = STATE.acuerdos.find(x => x.agreement_id === a.agreement_id);
+  const record = { ...a, ...calc };
+  STATE.acuerdos = STATE.acuerdos.filter(x => x.agreement_id !== a.agreement_id);
+  STATE.acuerdos.unshift(record);
+
+  // Sincronizar calendario de ejecución
+  STATE.calendarioEjecucion = STATE.calendarioEjecucion.filter(x => x.agreement_id !== a.agreement_id);
+  if (calc.estatus === "APROBADO" && (a.area_confirma === "Marketing" || a.area_confirma === "Operaciones")) {
+    const previa = (existente && existente._ejecPrevia) || null;
+    STATE.calendarioEjecucion.push({
+      agreement_id: a.agreement_id, area: a.area_confirma, fecha_esperada: a.fecha_fin,
+      responsable_ejecucion: previa?.responsable_ejecucion || "", ejecutado: previa?.ejecutado || "No",
+      fecha_ejecucion: previa?.fecha_ejecucion || null, evidencia: previa?.evidencia || "",
+      observaciones: previa?.observaciones || "",
+    });
+  }
+
+  // Regenerar cuotas, preservando lo ya cobrado por número de cuota
+  const cuotasPrevias = {};
+  STATE.cuotas.filter(c => c.agreement_id === a.agreement_id).forEach(c => { cuotasPrevias[c.cuota_numero] = c; });
+  const nuevasCuotas = generarCuotas(a.agreement_id, a, calc).map(c => {
+    const prev = cuotasPrevias[c.cuota_numero];
+    if (prev) {
+      return { ...c, base_real_periodo: prev.base_real_periodo, monto_cobrado_cuota: prev.monto_cobrado_cuota,
+        fecha_cobro: prev.fecha_cobro, documento_referencia: prev.documento_referencia };
+    }
+    return c;
+  });
+  STATE.cuotas = STATE.cuotas.filter(c => c.agreement_id !== a.agreement_id).concat(nuevasCuotas);
+
+  saveStore();
+  return calc;
+}
+function handleGuardarAcuerdo(ev) {
+  ev.preventDefault();
+  const a = readFormAcuerdo();
+  const errores = [];
+  if (!a.agreement_id) errores.push("Agreement ID es obligatorio.");
+  const existe = STATE.acuerdos.find(x => x.agreement_id === a.agreement_id);
+  const editando = document.getElementById("form-acuerdo").dataset.editing === a.agreement_id;
+  if (existe && !editando) errores.push(`El Agreement ID '${a.agreement_id}' ya existe.`);
+  if (a.fecha_fin < a.fecha_inicio) errores.push("La fecha fin debe ser posterior o igual a la fecha inicio.");
+  [["Responsable Comercial", a.responsable_comercial], ["Proveedor", a.proveedor], ["Descripción", a.descripcion]].forEach(([label, val]) => {
+    if (!val) errores.push(`El campo '${label}' es obligatorio.`);
+  });
+  const errBox = document.getElementById("ac-registrar-errors");
+  if (errores.length) {
+    errBox.innerHTML = `<div class="error-box"><strong>Revisa lo siguiente:</strong><ul>${errores.map(e => `<li>${escapeHtml(e)}</li>`).join("")}</ul></div>`;
+    document.getElementById("ac-registrar-result").innerHTML = "";
+    return false;
+  }
+  errBox.innerHTML = "";
+  const calc = guardarAcuerdoCompleto(a);
+  const bannerClass = calc.estatus === "APROBADO" ? "success" : "danger";
+  document.getElementById("ac-registrar-result").innerHTML = `
+    <div class="result-banner ${bannerClass}">
+      <span class="pill ${pillClassAcuerdo(calc.estatus)}">${calc.estatus}</span>
+      <div>
+        <div class="rb-title">Acuerdo ${escapeHtml(a.agreement_id)} guardado</div>
+        <div class="rb-sub">${escapeHtml(calc.motivo_alerta)} · Duración ${calc.duracion_meses} meses · ${calc.n_cobros_esperados} cuota(s) esperada(s)</div>
+      </div>
+    </div>`;
+  showToast(`${a.agreement_id} guardado — ${calc.estatus}`);
+  document.getElementById("form-acuerdo").dataset.editing = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setTimeout(() => resetFormAcuerdo(), 10);
+  return false;
+}
+function editarAcuerdo(agreementId) {
+  const a = STATE.acuerdos.find(x => x.agreement_id === agreementId);
+  if (!a) return;
+  goPage("ac-registrar");
+  document.getElementById("a-id").value = a.agreement_id;
+  document.getElementById("a-pais").value = a.pais;
+  document.getElementById("a-responsable").value = a.responsable_comercial;
+  document.getElementById("a-proveedor").value = a.proveedor;
+  document.getElementById("a-tipo-acuerdo").value = a.tipo_acuerdo;
+  document.getElementById("a-descripcion").value = a.descripcion;
+  document.getElementById("a-tipo-valor").value = a.tipo_valor;
+  toggleTipoValor();
+  if (a.tipo_valor === "Monto variable") {
+    document.getElementById("a-base-variable").value = a.base_variable || "Sell In";
+    toggleBaseOtro();
+    document.getElementById("a-detalle-base").value = a.detalle_base || "";
+    document.getElementById("a-pct").value = a.pct_acordado || "";
+  } else {
+    document.getElementById("a-monto-total").value = a.monto_total_negociacion || "";
+  }
+  document.getElementById("a-moneda").value = a.moneda;
+  document.getElementById("a-fecha-inicio").value = a.fecha_inicio;
+  document.getElementById("a-fecha-fin").value = a.fecha_fin;
+  document.getElementById("a-frecuencia").value = a.frecuencia_cobro;
+  document.getElementById("a-area-confirma").value = a.area_confirma;
+  toggleCondicionComercial();
+  document.getElementById("a-condicion").value = a.condicion_confirmada || "No";
+  document.getElementById("a-aprobacion").value = a.aprobacion_escrita;
+  document.getElementById("a-referencia").value = a.referencia_aprobacion || "";
+  document.getElementById("a-relacionado").value = a.id_relacionado || "";
+  document.getElementById("a-meta").value = a.meta_umbral || "";
+  document.getElementById("a-observaciones").value = a.observaciones || "";
+  document.getElementById("form-acuerdo").dataset.editing = agreementId;
+  showToast(`Editando ${agreementId}`);
+}
+function eliminarAcuerdo(agreementId) {
+  STATE.acuerdos = STATE.acuerdos.filter(x => x.agreement_id !== agreementId);
+  STATE.calendarioEjecucion = STATE.calendarioEjecucion.filter(x => x.agreement_id !== agreementId);
+  STATE.cuotas = STATE.cuotas.filter(x => x.agreement_id !== agreementId);
+  saveStore();
+  renderPanelAcuerdos();
+  showToast(`${agreementId} eliminado`);
+}
+
+/* ==========================================================================
+   ACUERDOS COMERCIALES — PANEL
+   ========================================================================== */
+function renderPanelAcuerdos() {
+  const box = document.getElementById("ac-panel-content");
+  if (!STATE.acuerdos.length) {
+    box.innerHTML = `<div class="card"><div class="empty-state"><strong>Aún no hay acuerdos</strong>Ve a "Registrar acuerdo" para capturar el primero.</div></div>`;
+    return;
+  }
+  const totales = { total: STATE.acuerdos.length,
+    APROBADO: STATE.acuerdos.filter(a => a.estatus === "APROBADO").length,
+    BLOQUEADO: STATE.acuerdos.filter(a => a.estatus === "BLOQUEADO").length };
+  const rows = STATE.acuerdos.map(a => `
+    <tr class="${a.estatus === 'APROBADO' ? 'row-success' : a.estatus === 'BLOQUEADO' ? 'row-danger' : ''}">
+      <td class="mono">${escapeHtml(a.agreement_id)}</td>
+      <td>${escapeHtml(a.pais)}</td>
+      <td>${escapeHtml(a.proveedor)}</td>
+      <td>${escapeHtml(a.tipo_acuerdo)}</td>
+      <td>${escapeHtml(a.tipo_valor)}</td>
+      <td class="tabular">${a.tipo_valor === "Monto fijo" ? fmtMoney(a.monto_total_negociacion) : "—"}</td>
+      <td class="tabular">${a.tipo_valor === "Monto variable" ? fmtPct(a.pct_acordado) + " · " + escapeHtml(a.base_variable||"") : "—"}</td>
+      <td>${escapeHtml(a.frecuencia_cobro)}</td>
+      <td class="tabular">${a.n_cobros_esperados}</td>
+      <td>${escapeHtml(a.area_confirma)}</td>
+      <td><span class="pill ${pillClassAcuerdo(a.estatus)}">${a.estatus}</span></td>
+      <td class="cell-muted">${escapeHtml(a.motivo_alerta)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editarAcuerdo('${a.agreement_id}')">Editar</button>
+        <button class="btn btn-danger-ghost btn-sm" onclick="eliminarAcuerdo('${a.agreement_id}')">Eliminar</button>
+      </td>
+    </tr>`).join("");
+  box.innerHTML = `
+    <div class="metrics-strip">
+      <div class="metric-tile"><div class="m-label">Total acuerdos</div><div class="m-value tabular">${totales.total}</div></div>
+      <div class="metric-tile accent-success"><div class="m-label">Aprobados</div><div class="m-value tabular">${totales.APROBADO}</div></div>
+      <div class="metric-tile accent-danger"><div class="m-label">Bloqueados</div><div class="m-value tabular">${totales.BLOQUEADO}</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Agreement ID</th><th>País</th><th>Proveedor</th><th>Tipo acuerdo</th><th>Tipo valor</th>
+          <th>Monto fijo</th><th>Variable</th><th>Frecuencia</th><th>N° cobros</th><th>Área confirma</th>
+          <th>Estatus</th><th>Motivo</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ==========================================================================
+   ACUERDOS COMERCIALES — CALENDARIOS DE EJECUCIÓN
+   ========================================================================== */
+function renderCalendarioEjecucion(area) {
+  const box = document.getElementById(area === "Marketing" ? "ac-mkt-content" : "ac-ops-content");
+  const filas = STATE.calendarioEjecucion.filter(f => f.area === area).map(f => {
+    const a = STATE.acuerdos.find(x => x.agreement_id === f.agreement_id) || {};
+    return { ...f, ...a, estatus_calc: calcularEstatusCalendarioEjecucion(f.agreement_id, f.ejecutado, f.fecha_esperada) };
+  });
+  if (!filas.length) {
+    box.innerHTML = `<div class="card"><div class="empty-state"><strong>Nada pendiente por ahora</strong>Aquí aparecerán los acuerdos APROBADOS cuya área que confirma ejecución sea ${escapeHtml(area)}.</div></div>`;
+    return;
+  }
+  const ejecutados = filas.filter(f => f.estatus_calc === "EJECUTADO").length;
+  const vencidos = filas.filter(f => f.estatus_calc === "VENCIDO / NO EJECUTADO").length;
+  const rows = filas.map(f => `
+    <tr>
+      <td class="mono">${escapeHtml(f.agreement_id)}</td>
+      <td>${escapeHtml(f.proveedor||"")}</td>
+      <td>${escapeHtml(f.tipo_acuerdo||"")}</td>
+      <td>${escapeHtml(f.descripcion||"")}</td>
+      <td>${escapeHtml(f.fecha_inicio||"")} → ${escapeHtml(f.fecha_fin||"")}</td>
+      <td>${escapeHtml(f.tipo_valor||"")}</td>
+      <td>${escapeHtml(f.responsable_ejecucion||"—")}</td>
+      <td><span class="pill ${pillClassEjec(f.estatus_calc)}">${f.estatus_calc}</span></td>
+      <td>${f.ejecutado === "Sí" ? "—" : `<button class="btn btn-ghost btn-sm" onclick="abrirConfirmarEjecucion('${escapeHtml(f.agreement_id)}','${area}')">Marcar ejecutado</button>`}</td>
+    </tr>`).join("");
+  box.innerHTML = `
+    <div class="metrics-strip">
+      <div class="metric-tile"><div class="m-label">Total</div><div class="m-value tabular">${filas.length}</div></div>
+      <div class="metric-tile accent-success"><div class="m-label">Ejecutados</div><div class="m-value tabular">${ejecutados}</div></div>
+      <div class="metric-tile accent-danger"><div class="m-label">Vencidos / no ejecutados</div><div class="m-value tabular">${vencidos}</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Agreement ID</th><th>Proveedor</th><th>Tipo</th><th>Descripción</th><th>Vigencia</th><th>Tipo valor</th><th>Responsable</th><th>Estatus</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div id="confirmar-ejecucion-box"></div>`;
+}
+function abrirConfirmarEjecucion(agreementId, area) {
+  const box = document.getElementById("confirmar-ejecucion-box");
+  box.innerHTML = `
+    <div class="card" style="margin-top:16px;">
+      <div class="field-group">
+        <div class="fg-title">Confirmar ejecución — ${escapeHtml(agreementId)}</div>
+        <div class="fg-grid">
+          <div class="field"><label>Responsable ejecución</label><input type="text" id="ce-responsable" value="${escapeHtml(currentUser()?.nombre_completo || "")}" /></div>
+          <div class="field"><label>Fecha de ejecución</label><input type="date" id="ce-fecha" value="${todayISO()}" /></div>
+          <div class="field" style="grid-column: span 2;"><label>Evidencia (correo, foto, acta o reporte)</label><input type="text" id="ce-evidencia" /></div>
+          <div class="field" style="grid-column: 1 / -1;"><label>Observaciones</label><textarea id="ce-observaciones"></textarea></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <span></span>
+        <button class="btn btn-primary" onclick="confirmarEjecucion('${agreementId}','${area}')">✅ Marcar como ejecutado</button>
+      </div>
+    </div>`;
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function confirmarEjecucion(agreementId, area) {
+  const f = STATE.calendarioEjecucion.find(x => x.agreement_id === agreementId && x.area === area);
+  if (!f) return;
+  f.responsable_ejecucion = document.getElementById("ce-responsable").value.trim();
+  f.ejecutado = "Sí";
+  f.fecha_ejecucion = document.getElementById("ce-fecha").value;
+  f.evidencia = document.getElementById("ce-evidencia").value.trim();
+  f.observaciones = document.getElementById("ce-observaciones").value.trim();
+  saveStore();
+  showToast(`${agreementId} marcado como ejecutado por ${area}`);
+  renderCalendarioEjecucion(area);
+}
+
+/* ==========================================================================
+   ACUERDOS COMERCIALES — CALENDARIO DE COBROS
+   ========================================================================== */
+function renderCalendarioCobros() {
+  const box = document.getElementById("ac-cobros-content");
+  if (!STATE.cuotas.length) {
+    box.innerHTML = `<div class="card"><div class="empty-state"><strong>Aún no hay cuotas</strong>Se generan automáticamente al aprobar un acuerdo.</div></div>`;
+    return;
+  }
+  const cuotas = STATE.cuotas.map(enriquecerCuota).sort((a,b) => a.fecha_esperada_cobro < b.fecha_esperada_cobro ? -1 : 1);
+  const devengadas = cuotas.filter(c => c.devengado === "Sí").length;
+  const vencidas = cuotas.filter(c => c.estatus_cuota === "VENCIDO").length;
+  const sinBase = cuotas.filter(c => c.estatus_cuota === "PENDIENTE BASE REAL").length;
+  const rows = cuotas.map(c => `
+    <tr>
+      <td class="mono">${escapeHtml(c.agreement_id)}</td>
+      <td class="tabular">${c.cuota_numero}</td>
+      <td>${escapeHtml(c.fecha_esperada_cobro)}</td>
+      <td>${escapeHtml(c.proveedor||"")}</td>
+      <td>${escapeHtml(c.tipo_acuerdo||"")}</td>
+      <td>${escapeHtml(c.tipo_valor)}</td>
+      <td class="tabular">${c.base_real_periodo != null ? fmtMoney(c.base_real_periodo) : "—"}</td>
+      <td class="tabular">${c.monto_esperado != null ? fmtMoney(c.monto_esperado) : "—"}</td>
+      <td>${escapeHtml(c.ejecucion_confirmada)}</td>
+      <td>${escapeHtml(c.devengado)}</td>
+      <td class="tabular">${fmtMoney(c.monto_cobrado_cuota||0)}</td>
+      <td class="tabular">${fmtMoney(c.pendiente_cuota||0)}</td>
+      <td><span class="pill ${pillClassCuota(c.estatus_cuota)}">${escapeHtml(c.estatus_cuota)}</span></td>
+      <td class="tabular">${c.dias_vencido||0}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="abrirRegistrarCobro('${escapeHtml(c.agreement_id)}',${c.cuota_numero})">Registrar</button></td>
+    </tr>`).join("");
+  box.innerHTML = `
+    <div class="metrics-strip">
+      <div class="metric-tile"><div class="m-label">Total cuotas</div><div class="m-value tabular">${cuotas.length}</div></div>
+      <div class="metric-tile accent-success"><div class="m-label">Devengadas</div><div class="m-value tabular">${devengadas}</div></div>
+      <div class="metric-tile accent-danger"><div class="m-label">Vencidas</div><div class="m-value tabular">${vencidas}</div></div>
+      <div class="metric-tile accent-warning"><div class="m-label">Pendiente base real</div><div class="m-value tabular">${sinBase}</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Agreement</th><th>Cuota</th><th>Fecha esperada</th><th>Proveedor</th><th>Tipo acuerdo</th><th>Tipo valor</th>
+          <th>Base real</th><th>Monto esperado</th><th>Ejecución</th><th>Devengado</th><th>Cobrado</th><th>Pendiente</th><th>Estatus</th><th>Días venc.</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div id="registrar-cobro-box"></div>`;
+}
+function abrirRegistrarCobro(agreementId, cuotaNumero) {
+  const c = STATE.cuotas.find(x => x.agreement_id === agreementId && x.cuota_numero === cuotaNumero);
+  if (!c) return;
+  const box = document.getElementById("registrar-cobro-box");
+  box.innerHTML = `
+    <div class="card" style="margin-top:16px;">
+      <div class="field-group">
+        <div class="fg-title">Registrar cobro — ${escapeHtml(agreementId)} · cuota ${cuotaNumero}</div>
+        <div class="fg-grid">
+          ${c.tipo_valor === "Monto variable" ? `<div class="field"><label>Base real período</label><input type="number" step="0.01" min="0" id="rc-base" value="${c.base_real_periodo ?? ""}" /></div>` : ""}
+          <div class="field"><label>Monto cobrado cuota</label><input type="number" step="0.01" min="0" id="rc-monto" value="${c.monto_cobrado_cuota || 0}" /></div>
+          <div class="field"><label>Fecha cobro</label><input type="date" id="rc-fecha" value="${todayISO()}" /></div>
+          <div class="field"><label>Documento / referencia</label><input type="text" id="rc-doc" value="${escapeHtml(c.documento_referencia||"")}" /></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <span></span>
+        <button class="btn btn-primary" onclick="guardarCobro('${agreementId}',${cuotaNumero})">💾 Guardar cobro</button>
+      </div>
+    </div>`;
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function guardarCobro(agreementId, cuotaNumero) {
+  const c = STATE.cuotas.find(x => x.agreement_id === agreementId && x.cuota_numero === cuotaNumero);
+  if (!c) return;
+  if (c.tipo_valor === "Monto variable") {
+    const baseEl = document.getElementById("rc-base");
+    c.base_real_periodo = baseEl.value === "" ? null : parseFloat(baseEl.value);
+  }
+  c.monto_cobrado_cuota = parseFloat(document.getElementById("rc-monto").value) || 0;
+  c.fecha_cobro = document.getElementById("rc-fecha").value;
+  c.documento_referencia = document.getElementById("rc-doc").value.trim();
+  saveStore();
+  showToast("Cobro actualizado");
+  renderCalendarioCobros();
+}
+
+/* ==========================================================================
+   ACUERDOS COMERCIALES — RESUMEN CCO
+   ========================================================================== */
+function renderResumenCCO() {
+  const box = document.getElementById("ac-resumen-content");
+  const cuotas = STATE.cuotas.map(enriquecerCuota);
+  const mkt = STATE.calendarioEjecucion.filter(f => f.area === "Marketing").map(f => ({ ...f, estatus_calc: calcularEstatusCalendarioEjecucion(f.agreement_id, f.ejecutado, f.fecha_esperada) }));
+  const ops = STATE.calendarioEjecucion.filter(f => f.area === "Operaciones").map(f => ({ ...f, estatus_calc: calcularEstatusCalendarioEjecucion(f.agreement_id, f.ejecutado, f.fecha_esperada) }));
+
+  const montoFijoNegociado = STATE.acuerdos.filter(a => a.tipo_valor === "Monto fijo" && a.estatus === "APROBADO").reduce((s,a) => s + (a.monto_total_negociacion||0), 0);
+  const variableDevengado = cuotas.filter(c => c.tipo_valor === "Monto variable" && c.devengado === "Sí").reduce((s,c) => s + (c.monto_esperado||0), 0);
+  const totalDevengado = cuotas.filter(c => c.devengado === "Sí").reduce((s,c) => s + (c.monto_esperado||0), 0);
+  const totalCobrado = cuotas.reduce((s,c) => s + (c.monto_cobrado_cuota||0), 0);
+  const pendienteDevengado = cuotas.reduce((s,c) => s + (c.pendiente_cuota||0), 0);
+  const pctCaptura = totalDevengado ? totalCobrado / totalDevengado : 0;
+
+  const acuerdosBloqueados = STATE.acuerdos.filter(a => a.estatus === "BLOQUEADO").length;
+  const mktPendientes = mkt.filter(f => f.estatus_calc === "PENDIENTE").length;
+  const opsPendientes = ops.filter(f => f.estatus_calc === "PENDIENTE").length;
+  const cuotasVencidas = cuotas.filter(c => c.estatus_cuota === "VENCIDO").length;
+  const montoVencido = cuotas.filter(c => c.estatus_cuota === "VENCIDO").reduce((s,c) => s + (c.pendiente_cuota||0), 0);
+  const variablesSinBase = cuotas.filter(c => c.estatus_cuota === "PENDIENTE BASE REAL").length;
+  const en30dias = (d) => { const dd = parseISO(d); const h = hoyDate(); const lim = new Date(h); lim.setDate(lim.getDate()+30); return dd >= h && dd <= lim; };
+  const proximos30 = cuotas.filter(c => en30dias(c.fecha_esperada_cobro)).length;
+
+  if (!STATE.acuerdos.length) {
+    box.innerHTML = `<div class="card"><div class="empty-state"><strong>Todavía no hay acuerdos</strong>El tablero se llena a medida que se registran acuerdos comerciales.</div></div>`;
+    return;
+  }
+
+  const kv = (k,v) => `<div class="kv-row"><span class="k">${escapeHtml(k)}</span><span class="v">${v}</span></div>`;
+  box.innerHTML = `
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+      <div class="card"><div class="field-group">
+        <div class="fg-title">KPI</div>
+        ${kv("Monto fijo negociado", fmtMoney(montoFijoNegociado))}
+        ${kv("Variable devengado", fmtMoney(variableDevengado))}
+        ${kv("Total devengado", fmtMoney(totalDevengado))}
+        ${kv("Total cobrado", fmtMoney(totalCobrado))}
+        ${kv("Pendiente devengado", fmtMoney(pendienteDevengado))}
+        ${kv("% captura", fmtPct(pctCaptura))}
+      </div></div>
+      <div class="card"><div class="field-group">
+        <div class="fg-title">Alertas</div>
+        ${kv("Acuerdos bloqueados", acuerdosBloqueados)}
+        ${kv("MKT pendientes", mktPendientes)}
+        ${kv("Ops pendientes", opsPendientes)}
+        ${kv("Cuotas vencidas", cuotasVencidas)}
+        ${kv("Monto vencido", fmtMoney(montoVencido))}
+        ${kv("Variables sin base real", variablesSinBase)}
+        ${kv("Cuotas próximos 30 días", proximos30)}
+      </div></div>
+    </div>
+    <div class="demo-flag" style="margin-top:18px; max-width:70ch;">
+      El sistema separa claramente tres momentos: Comercial define el acuerdo y sus economics; Marketing/Operaciones
+      confirman ejecución; Finanzas administra cada cuota en el calendario de cobros. Para acuerdos variables, el
+      monto esperado nace únicamente cuando Finanzas carga la base real del período.
+    </div>`;
+}
+
+/* ==========================================================================
+   BOOT
+   ========================================================================== */
+function boot() {
+  const user = currentUser();
+  if (!user) return;
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("app").classList.add("ready");
+
+  document.getElementById("user-avatar").textContent = initials(user.nombre_completo);
+  document.getElementById("user-name").textContent = user.nombre_completo;
+  document.getElementById("user-role").textContent = user.rol;
+
+  fillSelect("f-pais", CAT.PAISES);
+  fillSelect("f-objetivo", CAT.OBJETIVOS);
+  fillSelect("f-mecanica", CAT.MECANICAS);
+  fillSelect("f-canal", CAT.CANALES);
+  fillSelectAcuerdos();
+
+  resetForm();
+  resetFormAcuerdo();
+  goPage("registrar");
+}
+
+(function init() {
+  const user = currentUser();
+  if (user) { boot(); }
+})();
+</script>
 
